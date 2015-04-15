@@ -8,7 +8,7 @@ package
 	
 	public class Board extends Entity
 	{
-		public var deck:Array = [];
+		public var deck:Vector.<BoardCard>;
 		public var players:Array = [];
 		public var board:Vector.<Vector.<BoardSpace>>;
 		
@@ -49,13 +49,13 @@ package
 		
 		public function createNewDeck():void
 		{
-			deck = [];	
+			deck = new Vector.<BoardCard>();
 			
 			// TODO - make the card class less BS please
-			for each (var card:Array in Constants.DECK_BASE)
+			for each (var cardData:Array in Constants.DECK_BASE)
 			{
-				for (var i:int = 0; i < card[Constants.DECK_CARD_COUNT]; i++) {
-					deck.push(Constants.deepCopyArray(card[Constants.DECK_CARD_DATA]));
+				for (var i:int = 0; i < cardData[Constants.DECK_CARD_COUNT]; i++) {
+					deck.push(BoardCard.BoardCardFromArray(cardData[Constants.DECK_CARD_DATA]));
 				}	
 			}
 			
@@ -119,7 +119,7 @@ package
 		
 				
 		// Pops the top card off the deck and returns it
-		public function dealCardFromDeck():Array
+		public function dealCardFromDeck():BoardCard
 		{
 			if (deck.length == 0) {
 				//trace("Deck is empty!");
@@ -200,9 +200,12 @@ package
 					playerTurn++;
 					if (playerTurn >= players.length)
 						playerTurn = 0;
+					
+					var curPlayer:Player = players[playerTurn];
+					curPlayer.prepareForTurn();
 						
 					// give them a card if there is one and they need one
-					var cards:Array = players[playerTurn].getCards();
+					var cards:Vector.<BoardCard> = players[playerTurn].getCards();
 					if (cards.length < Constants.HAND_CARD_LIMIT && deck.length > 0)
 					{
 						players[playerTurn].giveCard(dealCardFromDeck());
@@ -369,7 +372,7 @@ package
 			{
 				// TODO - move into own class so it's not massive lag
 				player = players[i];
-				var cards:Array = player.getCards();
+				var cards:Vector.<BoardCard> = player.getCards();
 				
 				var playerY:int = hudY + (playerHudHeight + playerHudMargin) * i;
 				
@@ -389,7 +392,7 @@ package
 				// draw their hand
 				for (j = 0; j < cards.length; j++)
 				{
-					var cardImage:Image = cards[j][0];
+					var cardImage:Image = cards[j].image;
 					cardImage.scale = 0.75; // TODO - hack while i figure card size out
 					
 					var cardY:int = playerY + 40;
@@ -438,7 +441,7 @@ package
 				return;
 			}
 			
-			var cards:Array = players[playerTurn].getCards();
+			var cards:Vector.<BoardCard> = players[playerTurn].getCards();
 			
 			if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED) // select a card
 			{
@@ -780,8 +783,8 @@ package
 			return playerPossibleMoves;
 		}
 
-		private function canUseCardForRoll(card:Array):Boolean {
-			if (card[Constants.DECK_CARD_TYPE] == Constants.CARD_ATK) {
+		private function canUseCardForRoll(card:BoardCard):Boolean {
+			if (card.type == Constants.CARD_ATK) {
 				return false;
 			}
 			

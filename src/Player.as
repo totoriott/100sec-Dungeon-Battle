@@ -15,10 +15,12 @@ package
 		internal var hp:int = 10;
 		internal var credits:int = 0;
 		
-		internal var hand:Array = [];
+		internal var hand:Vector.<BoardCard>;
 		internal var items:Array = [];
 		internal var position:BoardPosition;
 		internal var points:int = 0;
+		
+		internal var cardBonus_movement:int = 0;
 		
 		internal var lastMovementRoll:Array = [];
 		
@@ -32,6 +34,7 @@ package
 		{
 			name = mName;
 			position = mPosition.deepCopy();
+			hand = new Vector.<BoardCard>();
 			
 			initUX();
 		}		
@@ -80,9 +83,9 @@ package
 			return position.deepCopy();
 		}
 		
-		public function getCards():Array
+		public function getCards():Vector.<BoardCard>
 		{
-			return Constants.deepCopyArray(hand);
+			return hand; // TODO: do i need to deep copy lol
 		}
 		
 		public function getMovementRoll():Array  
@@ -96,6 +99,8 @@ package
 			for (var i:int = 0; i < lastMovementRoll.length; i++) {
 				moves += lastMovementRoll[i];
 			}
+			moves += cardBonus_movement;
+			
 			return moves;
 		}
 		
@@ -113,7 +118,7 @@ package
 		}
 		
 		// TODO - you could sort the hands even though you hella don't in battle hunter
-		public function giveCard(newCard:Array):void
+		public function giveCard(newCard:BoardCard):void
 		{
 			if (hand.length >= Constants.HAND_CARD_LIMIT)
 			{
@@ -121,16 +126,25 @@ package
 			}
 			else if (newCard != null)
 			{
-				hand.push(Constants.deepCopyArray(newCard));
+				hand.push(newCard.deepCopy());
 			}
+		}
+		
+		public function prepareForTurn():void {
+			cardBonus_movement = 0;
 		}
 		
 		// use a card when moving about the board
 		public function activateCardOnBoard(index:int):void
 		{
-			hand.splice(index, 1); // remove the card from the hand	
+			var card:BoardCard = hand[index];
 			
 			// TODO: gain its effect
+			if (card.type == Constants.CARD_MOVE) {
+				cardBonus_movement = card.value;
+			}
+			
+			hand.splice(index, 1); // remove the card from the hand	
 		}
 		
 		// UX things
