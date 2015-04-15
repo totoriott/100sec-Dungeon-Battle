@@ -143,6 +143,7 @@ package
 		public static var BOARD_ROLL_COUNT:int = 1;
 		public static var ATK_ROLL_LIMIT:int = 6;
 		public static var ATK_ROLL_COUNT:int = 2;
+		public static var FLAG_BASE_POINTS:int = 250;
 		public static var FLAG_MULTIPLIERS:Array = [1, 1, 2, 4, 6, 8];
 		
 		// Deck constants

@@ -615,6 +615,7 @@ package
 			
 			// no messing with the camera here
 			
+			var curPlayer:Player = players[playerTurn];
 			var playerPos:BoardPosition = players[playerTurn].getPosition();
 			var space:BoardSpace = getSpace(playerPos.row, playerPos.col).deepCopy();
 			
@@ -627,7 +628,19 @@ package
 					break;
 					
 				case Constants.BOARD_FLAG:
-					// TODO: get the flag
+					// award flag points to player
+					var flagPoints:int = Constants.FLAG_BASE_POINTS;
+					
+					var flagValue:int = Math.floor(FP.rand(6));
+					if (flagValue == 5 && FP.random < 0.5) {
+						flagValue = 1; // kick back from 8x to 1x
+					}
+					if (flagValue == 0) {
+						// TODO: activate trap
+					}
+					
+					flagPoints *= Constants.FLAG_MULTIPLIERS[flagValue];
+					curPlayer.awardFlagPoints(flagPoints);
 					
 					var newFlag:BoardPosition = getEmptySpaceOnBoard();
 					board[playerPos.row][playerPos.col].changeTo(Constants.BOARD_EMPTY, 0); // empty out the old space
