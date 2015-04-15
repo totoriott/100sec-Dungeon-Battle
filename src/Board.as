@@ -25,6 +25,8 @@ package
 		private var cardIndex:int = 0; // index of the card the player is selecting
 		private var playerWalk:Array = []; // the squares that the player is walking this turn
 		private var playerPossibleMoves:Array = []; // the squares that the player could walk to this turn
+		private var playerPossibleWalks:Array = []; // the board, where each square is possible walks to that square this turn
+		
 		private var moveTimer:int = 0; 
 		
 		public function Board() 
@@ -349,9 +351,12 @@ package
 				// adjust for the viewport
 				spaceCopy[0] -= startRow;
 				spaceCopy[1] -= startCol;
+				var color = 0x0000FF;
+				if (playerWalk.indexOf(space) == playerWalk.length - 1) // last tile in walk
+					color = 0x00FFFF;
 				if (spaceCopy[0] >= 0 && spaceCopy[0] < viewRows)
 					if (spaceCopy[1] >= 0 && spaceCopy[1] < viewCols)
-						Draw.rect(boardX + spaceCopy[1] * tileSize, boardY + spaceCopy[0] * tileSize, tileSize, tileSize, 0x0000FF, 0.5);
+						Draw.rect(boardX + spaceCopy[1] * tileSize, boardY + spaceCopy[0] * tileSize, tileSize, tileSize, color, 0.5);
 			}
 			
 			// draw the HUD
@@ -517,31 +522,47 @@ package
 			
 			// TODO: moving onto other players to battle them???
 			
+			if (false) // TODO: remove manual walk selecting
+			{
+				if (newSquareSelected) // check to see if you zeroed out your move
+				{
+					if (newSquare[0] == playerSpace[0] && newSquare[1] == playerSpace[1]) //if you backtraced to the start
+						playerWalk = playerWalk.slice(0, 0); // clear the walk
+				}
+				
+				if (newSquareSelected && isMoveableSpace(newSquare)) // now let's talk about other walks
+				{
+					playerWalk.push(newSquare); // push the square onto the walk
+						
+					// truncate any loops in the walk
+					for (var i:int = 0; i < playerWalk.length - 1; i++) // don't truncate last square
+					{
+						var walkSpace:Array = playerWalk[i];
+						if (walkSpace[0] == newSquare[0] && walkSpace[1] == newSquare[1])
+						{
+							playerWalk = playerWalk.slice(0, i + 1);
+							break;
+						}
+					}
+				}
+				
+				// shrink the walk to fit how much the player can move
+				if (playerWalk.length > curPlayer.getMovementRollValue()) {
+					playerWalk = playerWalk.slice(0, curPlayer.getMovementRollValue());
+				}
+			}
+			
 			if (newSquareSelected) // check to see if you zeroed out your move
 			{
 				if (newSquare[0] == playerSpace[0] && newSquare[1] == playerSpace[1]) //if you backtraced to the start
 					playerWalk = playerWalk.slice(0, 0); // clear the walk
 			}
-			
-			if (newSquareSelected && isMoveableSpace(newSquare)) // now let's talk about other walks
-			{
-				playerWalk.push(newSquare); // push the square onto the walk
-					
-				// truncate any loops in the walk
-				for (var i:int = 0; i < playerWalk.length - 1; i++) // don't truncate last square
-				{
-					var walkSpace:Array = playerWalk[i];
-					if (walkSpace[0] == newSquare[0] && walkSpace[1] == newSquare[1])
-					{
-						playerWalk = playerWalk.slice(0, i + 1);
-						break;
-					}
+				
+			if (newSquareSelected && isMoveableSpace(newSquare)) {
+				if (playerPossibleWalks[newSquare[0]][newSquare[1]].length > 0) { 
+					var thing:Array = playerPossibleWalks[newSquare[0]][newSquare[1]];
+					playerWalk = playerPossibleWalks[newSquare[0]][newSquare[1]][0];
 				}
-			}
-			
-			// shrink the walk to fit how much the player can move
-			if (playerWalk.length > curPlayer.getMovementRollValue()) {
-				playerWalk = playerWalk.slice(0, curPlayer.getMovementRollValue());
 			}
 		}
 		
@@ -642,7 +663,6 @@ package
 			var curPlayer:Player = players[playerTurn];
 			var curPosition:Array = curPlayer.getPosition();
 			var playerRoll:int = curPlayer.getMovementRollValue(); 
-			curPosition.push(playerRoll); // pos tuple here is x, y, num of spaces left
 			
 			var dfsStack:Array = [];
 			var possibleSpaces:Array = [];
@@ -657,23 +677,56 @@ package
 				}
 			}
 			
-			dfsStack.push([curPosition[0] - 1, curPosition[1], playerRoll - 1]); 
-			dfsStack.push([curPosition[0] + 1, curPosition[1], playerRoll - 1]); 
-			dfsStack.push([curPosition[0], curPosition[1] - 1, playerRoll - 1]); 
-			dfsStack.push([curPosition[0], curPosition[1] + 1, playerRoll - 1]); 
+			// init possible walks (this is used to determine how you walks
+			playerPossibleWalks = new Array(board.length);
+			for (i = 0; i < board.length; i++)
+			{
+				playerPossibleWalks[i] = new Array(board[0].length);
+				for (j = 0; j < board[0].length; j++)
+				{
+					playerPossibleWalks[i][j] = [];
+				}
+			}
+			
+			// TODO: logic got bad because of reasons
+			
+			var nextPos:Array = [[curPosition[0] - 1, curPosition[1]]];
+			dfsStack.push([curPosition[0] - 1, curPosition[1], nextPos]); 
+			
+			nextPos = [[curPosition[0] + 1, curPosition[1]]];
+			dfsStack.push([curPosition[0] + 1, curPosition[1], nextPos]); 
+			
+			nextPos = [[curPosition[0], curPosition[1] - 1]];
+			dfsStack.push([curPosition[0], curPosition[1] - 1, nextPos]); 
+			
+			nextPos = [[curPosition[0], curPosition[1] + 1]];
+			dfsStack.push([curPosition[0], curPosition[1] + 1, nextPos]); 
 			
 			while (dfsStack.length > 0) {
 				var curNode:Array = dfsStack.pop();
-				if (curNode[2] >= 0) { // spaces left to move 
-					var distance:int = curNode[2];
+				var curWalk:Array = curNode[2];
+
+				if (curWalk.length <= playerRoll) { // spaces left to move (yes this is off by one because of bad loop logic)
 					var curSpace:Array = curNode.splice(0, 2);
-					if (isMoveableSpace(curSpace) && markedSpaces[curSpace[0]][curSpace[1]] <= distance) {
-						markedSpaces[curSpace[0]][curSpace[1]] = distance;
+					if (isMoveableSpace(curSpace)) {
+						markedSpaces[curSpace[0]][curSpace[1]] = 1; // for now just mark 1 to indicate it can be traveled to
+						playerPossibleWalks[curSpace[0]][curSpace[1]].push(curWalk);
 						
-						dfsStack.push([curSpace[0] - 1, curSpace[1], distance - 1]); 
-						dfsStack.push([curSpace[0] + 1, curSpace[1], distance - 1]); 
-						dfsStack.push([curSpace[0], curSpace[1] - 1, distance - 1]); 
-						dfsStack.push([curSpace[0], curSpace[1] + 1, distance - 1]); 
+						var newWalk:Array = Constants.deepCopyArray(curWalk);
+						newWalk.push([curSpace[0] - 1, curSpace[1]]);
+						dfsStack.push([curSpace[0] - 1, curSpace[1], newWalk]); 
+						
+						newWalk = Constants.deepCopyArray(curWalk);
+						newWalk.push([curSpace[0] + 1, curSpace[1]]);
+						dfsStack.push([curSpace[0] + 1, curSpace[1], newWalk]); 
+						
+						newWalk = Constants.deepCopyArray(curWalk);
+						newWalk.push([curSpace[0], curSpace[1] - 1]);
+						dfsStack.push([curSpace[0], curSpace[1] - 1, newWalk]); 
+						
+						newWalk = Constants.deepCopyArray(curWalk);
+						newWalk.push([curSpace[0], curSpace[1] + 1]);
+						dfsStack.push([curSpace[0], curSpace[1] + 1, newWalk]); 
 					}
 				}
 			}
@@ -686,6 +739,30 @@ package
 				{
 					if (markedSpaces[i][j] >= 0) {
 						playerPossibleMoves.push([i, j]);
+					}
+				}
+			}
+			
+			// trim walks to just the most efficient ones
+			for (i = 0; i < playerPossibleWalks.length; i++)
+			{
+				for (j = 0; j < playerPossibleWalks[0].length; j++)
+				{
+					if (playerPossibleWalks[i][j] != null && playerPossibleWalks[i][j].length > 0) {
+						var allWalks:Array = Constants.deepCopyArray(playerPossibleWalks[i][j]);
+						var minWalk:int = 999999;
+						for (var k:int = 0; k < allWalks.length; k++) {
+							if (allWalks[k].length < minWalk) {
+								minWalk = allWalks[k].length;
+							}
+						}
+						
+						playerPossibleWalks[i][j] = [];
+						for (k = 0; k < allWalks.length; k++) {
+							if (allWalks[k].length == minWalk) {
+								playerPossibleWalks[i][j].push(allWalks[k]);
+							}
+						}
 					}
 				}
 			}
