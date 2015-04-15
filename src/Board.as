@@ -43,7 +43,7 @@ package
 			initPlayers();
 			
 			playerTurn = players.length - 1;
-			changeState(Constants.GSTATE_SELECTACTION);
+			changeState(Constants.GSTATE_STARTTURN);
 			
 			// TODO - decide first player
 		}
@@ -196,7 +196,7 @@ package
 		{
 			switch (newState) // do any Enter State logic
 			{
-				case Constants.GSTATE_SELECTACTION:
+				case Constants.GSTATE_STARTTURN:
 					// "NEXT TURN"
 					// TODO: other turn start things
 					playerTurn++;
@@ -212,6 +212,9 @@ package
 					{
 						players[playerTurn].giveCard(dealCardFromDeck());
 					}
+					break;
+					
+				case Constants.GSTATE_SELECTACTION:
 					break;
 					
 				case Constants.GSTATE_SELECTCARD:
@@ -238,6 +241,7 @@ package
 					
 				case Constants.GSTATE_MOVING:
 					playerPossibleMoves = new Vector.<BoardPosition>();
+					playerPossibleWalks = new Vector.<Vector.<Vector.<Vector.<BoardPosition>>>>(board.length, true);
 					moveTimer = Constants.FRAMES_BETWEEN_SQUARES_MOVED; // set the time for each move
 					break;
 					
@@ -255,8 +259,25 @@ package
 		{
 			var inputArray:Array = getInputArray();
 			
+			// global key things
+			
+			if (inputArray[Constants.KEY_DEBUG] == Constants.INPUT_PRESSED) // debug button
+			{
+				initNewGame();
+				return;
+			}
+			
+			if (inputArray[Constants.KEY_FIRE3] == Constants.INPUT_DOWN) // if we're holding down the camera button
+			{
+				update_moveCamera(inputArray);
+				return;
+			}
+			
 			switch (gameState)
 			{
+				case Constants.GSTATE_STARTTURN:
+					update_startTurn(inputArray);
+					
 				case Constants.GSTATE_SELECTACTION: // what will you do this turn
 					update_selectAction(inputArray);
 					break;
@@ -439,6 +460,10 @@ package
 			return inputArray;
 		}
 		
+		private function update_startTurn(inputArray:Array):void {
+			changeState(Constants.GSTATE_SELECTACTION); // TODO: this state
+		}
+		
 		private function update_selectAction(inputArray:Array):void {
 			changeState(Constants.GSTATE_SELECTCARD); // TODO: this state
 		}
@@ -447,18 +472,6 @@ package
 		private function update_playerCard(inputArray:Array):void
 		{
 			var curPlayer:Player = players[playerTurn];
-			
-			if (inputArray[Constants.KEY_DEBUG] == Constants.INPUT_PRESSED) // debug button
-			{
-				initNewGame();
-				return;
-			}
-			
-			if (inputArray[Constants.KEY_FIRE3] == Constants.INPUT_DOWN) // if we're holding down the camera button
-			{
-				update_moveCamera(inputArray);
-				return;
-			}
 			
 			var cards:Vector.<BoardCard> = players[playerTurn].getCards();
 			
@@ -710,7 +723,7 @@ package
 			var curPlayer:Player = players[playerTurn];
 			curPlayer.finishTurn();
 			
-			changeState(Constants.GSTATE_SELECTACTION);
+			changeState(Constants.GSTATE_STARTTURN);
 		}
 		
 		// a non-state update, for when you're holding down the move button and want to move the camera

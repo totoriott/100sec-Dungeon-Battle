@@ -8,13 +8,14 @@ package
 	{
 		// Game state
 		public static var GSTATE_GAMEOVER:int = -1;
-		public static var GSTATE_SELECTACTION:int = 0;
-		public static var GSTATE_SELECTCARD:int = 1;
-		public static var GSTATE_DOROLL:int = 2;
-		public static var GSTATE_SELECTMOVE:int = 3;
-		public static var GSTATE_MOVING:int = 4;
-		public static var GSTATE_ACTIVATESPACE:int = 5;
-		public static var GSTATE_ENDTURN:int = 6;
+		public static var GSTATE_STARTTURN:int = 0;
+		public static var GSTATE_SELECTACTION:int = 1;
+		public static var GSTATE_SELECTCARD:int = 2;
+		public static var GSTATE_DOROLL:int = 3;
+		public static var GSTATE_SELECTMOVE:int = 4;
+		public static var GSTATE_MOVING:int = 5;
+		public static var GSTATE_ACTIVATESPACE:int = 6;
+		public static var GSTATE_ENDTURN:int = 7;
 		
 		// Graphics things
 		public static var FRAMES_BETWEEN_SQUARES_MOVED:int = 5;
