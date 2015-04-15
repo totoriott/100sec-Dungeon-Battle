@@ -765,7 +765,7 @@ package
 				markedSpaces[i] = new Array(board[0].length);
 				for (var j:int = 0; j < board[0].length; j++)
 				{
-					markedSpaces[i][j] = -1;
+					markedSpaces[i][j] = 999999;
 				}
 			}
 			
@@ -809,28 +809,31 @@ package
 				if (curWalk.length <= playerRoll) { // spaces left to move (yes this is off by one because of bad loop logic)
 					var curSpace:BoardPosition = curNode[0];
 					if (isMoveableSpace(curSpace)) {
-						markedSpaces[curSpace.row][curSpace.col] = 1; // for now just mark 1 to indicate it can be traveled to
 						playerPossibleWalks[curSpace.row][curSpace.col].push(curWalk);
+
+						if (curWalk.length < markedSpaces[curSpace.row][curSpace.col]) {
+							markedSpaces[curSpace.row][curSpace.col] = curWalk.length;
 						
-						var newPos:BoardPosition = new BoardPosition(curSpace.row - 1, curSpace.col);
-						var newWalk:Vector.<BoardPosition> = Constants.deepCopyBoardPositionVector(curWalk);
-						newWalk.push(newPos);
-						dfsStack.push([newPos, newWalk]); 
-						
-						newPos = new BoardPosition(curSpace.row + 1, curSpace.col);
-						newWalk = Constants.deepCopyBoardPositionVector(curWalk);
-						newWalk.push(newPos);
-						dfsStack.push([newPos, newWalk]); 
-						
-						newPos = new BoardPosition(curSpace.row, curSpace.col - 1);
-						newWalk = Constants.deepCopyBoardPositionVector(curWalk);
-						newWalk.push(newPos);
-						dfsStack.push([newPos, newWalk]); 
-						
-						newPos = new BoardPosition(curSpace.row, curSpace.col + 1);
-						newWalk = Constants.deepCopyBoardPositionVector(curWalk);
-						newWalk.push(newPos);
-						dfsStack.push([newPos, newWalk]); 
+							var newPos:BoardPosition = new BoardPosition(curSpace.row - 1, curSpace.col);
+							var newWalk:Vector.<BoardPosition> = Constants.deepCopyBoardPositionVector(curWalk);
+							newWalk.push(newPos);
+							dfsStack.push([newPos, newWalk]); 
+							
+							newPos = new BoardPosition(curSpace.row + 1, curSpace.col);
+							newWalk = Constants.deepCopyBoardPositionVector(curWalk);
+							newWalk.push(newPos);
+							dfsStack.push([newPos, newWalk]); 
+							
+							newPos = new BoardPosition(curSpace.row, curSpace.col - 1);
+							newWalk = Constants.deepCopyBoardPositionVector(curWalk);
+							newWalk.push(newPos);
+							dfsStack.push([newPos, newWalk]); 
+							
+							newPos = new BoardPosition(curSpace.row, curSpace.col + 1);
+							newWalk = Constants.deepCopyBoardPositionVector(curWalk);
+							newWalk.push(newPos);
+							dfsStack.push([newPos, newWalk]); 
+						}
 					}
 				}
 			}
@@ -841,7 +844,7 @@ package
 			{
 				for (j = 0; j < board[0].length; j++)
 				{
-					if (markedSpaces[i][j] >= 0) {
+					if (markedSpaces[i][j] < 999999) {
 						playerPossibleMoves.push(new BoardPosition(i, j));
 					}
 				}
