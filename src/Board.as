@@ -10,7 +10,7 @@ package
 	{
 		public var deck:Array = [];
 		public var players:Array = [];
-		public var board:Array = [];
+		public var board:Vector.<Vector.<BoardSpace>>;
 		
 		// TODO - scrolling view?
 		// TODO - reset these somewhere
@@ -87,33 +87,33 @@ package
 			// TODO - make the board more interesting than this
 			var boardRows:int = 14;
 			var boardCols:int = 14;
-			board = new Array(boardRows);
+			board = new Vector.<Vector.<BoardSpace>>(boardRows, true);
 			for (var i:int = 0; i < boardRows; i++)
 			{
-				board[i] = new Array(boardCols);
+				board[i] = new Vector.<BoardSpace>(boardCols, true);
 				for (var j:int = 0; j < boardCols; j++)
 				{
-					board[i][j] = [Constants.BOARD_EMPTY, 0];
+					board[i][j] = new BoardSpace(Constants.BOARD_EMPTY, 0, i, j);
 				}
 			}
 			
 			// Place the exit
 			var emptySpace:Array = getEmptySpaceOnBoard();
-			board[emptySpace[0]][emptySpace[1]] = [Constants.BOARD_EXIT, 0];
+			board[emptySpace[0]][emptySpace[1]] = new BoardSpace(Constants.BOARD_EXIT, 0, emptySpace[0], emptySpace[1]);
 			
 			// Place the treasures
 			// TODO - put something in the treasures
 			for (i = 0; i < Constants.BOARD_BOX_COUNT; i++)
 			{
 				emptySpace = getEmptySpaceOnBoard();
-				board[emptySpace[0]][emptySpace[1]] = [Constants.BOARD_BOX, 0];
+				board[emptySpace[0]][emptySpace[1]] = new BoardSpace(Constants.BOARD_BOX, 0, emptySpace[0], emptySpace[1]);
 			}
 			
 			// Place the flags
 			for (i = 0; i < Constants.BOARD_FLAG_COUNT; i++)
 			{
 				emptySpace = getEmptySpaceOnBoard();
-				board[emptySpace[0]][emptySpace[1]] = [Constants.BOARD_FLAG, i];
+				board[emptySpace[0]][emptySpace[1]] = new BoardSpace(Constants.BOARD_FLAG, i, emptySpace[0], emptySpace[1]);
 			}
 		}
 		
@@ -137,7 +137,7 @@ package
 			var col:int = -1;
 			var tries:int = 0;
 			
-			while (row < 0 || col < 0 || board[row][col][0] != Constants.BOARD_EMPTY || isPlayerSpace([row, col]))
+			while (row < 0 || col < 0 || getSpace(row, col).type != Constants.BOARD_EMPTY || isPlayerSpace([row, col]))
 			{
 				row = FP.rand(board.length);
 				col = FP.rand(board[0].length);
@@ -183,7 +183,7 @@ package
 			var unmovableSpaces:Array = [Constants.BOARD_NULL];
 			for each (var spaceType:int in unmovableSpaces)
 			{
-				if (board[space[0]][space[1]][0] == spaceType)
+				if (getSpace(space[0],space[1]).type == spaceType)
 					return false;
 			}
 
@@ -289,8 +289,8 @@ package
 					if (i >= board.length || j >= board[0].length)
 						continue;
 						
-					var sprite:int = board[i][j][0];
-					var frame:int = board[i][j][1];
+					var sprite:int = getSpace(i, j).type;
+					var frame:int = getSpace(i, j).value;
 					if (sprite == Constants.BOARD_BOX) // don't use the treasure value as the frame, use only frame 0
 						frame = 0; // TODO - different looking boxes idk refactor that
 					
@@ -604,22 +604,22 @@ package
 			// no messing with the camera here
 			
 			var playerPos:Array = players[playerTurn].getPosition();
-			var space:Array = Constants.deepCopyArray(board[playerPos[0]][playerPos[1]]);
+			var space:BoardSpace = getSpace(playerPos[0], playerPos[1]).deepCopy();
 			
-			switch (space[0])
+			switch (space.type)
 			{
 				case Constants.BOARD_BOX:
 					// TODO: get the box
 					
-					board[playerPos[0]][playerPos[1]] = [Constants.BOARD_EMPTY, 0]; // empty out the space
+					board[playerPos[0]][playerPos[1]].changeTo(Constants.BOARD_EMPTY, 0); // empty out the space
 					break;
 					
 				case Constants.BOARD_FLAG:
 					// TODO: get the flag
 					
 					var newFlag:Array = getEmptySpaceOnBoard();
-					board[playerPos[0]][playerPos[1]] = [Constants.BOARD_EMPTY, 0]; // empty out the old space
-					board[newFlag[0]][newFlag[1]] = space; // jump the flag to the new place
+					board[playerPos[0]][playerPos[1]].changeTo(Constants.BOARD_EMPTY, 0); // empty out the old space
+					board[newFlag[0]][newFlag[1]].changeTo(Constants.BOARD_FLAG, space.value); // jump the flag to the new place
 					break;
 					
 				case Constants.BOARD_EXIT:
@@ -776,6 +776,11 @@ package
 			}
 			
 			return true;
+		}
+		
+		// i can't believe as3 won't type this properly otherwise
+		private function getSpace(row:int, col:int):BoardSpace {
+			return board[row][col];
 		}
 	}
 }
