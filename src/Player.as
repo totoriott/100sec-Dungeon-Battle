@@ -21,7 +21,13 @@ package
 		
 		internal var legDamage:Boolean = false;
 		internal var stunTurnCounter:int = 0;
+		
+		internal var handicapLevels:int = 0; // levels below highest player. handicap points from this
 		internal var flagPoints:int = 0;
+		internal var damageDealt:int = 0; // attack points calculated from these two
+		internal var enemiesKOed:int = 0;
+		internal var stepsWalked:int = 0; // move points calculated 
+		// item points calculated from items obtained
 		
 		internal var card_boardActivated:BoardCard;
 		internal var cardBonus_movement:int = 0;
@@ -125,6 +131,16 @@ package
 			position = newSpace;
 		}
 		
+		public function incrementStepsWalked(count:int):void {
+			stepsWalked += count;
+		}
+		
+		public function setHandicapFromMaxLevel(maxLv:int):void {
+			if (level < maxLv) {
+				handicapLevels = maxLv - level;
+			}
+		}
+		
 		public function awardFlagPoints(pts:int):void {
 			flagPoints += pts;
 		}
@@ -223,6 +239,17 @@ package
 			return card_boardActivated;
 		}
 		
+		public function calculateTotalPoints():int {
+			var totalPoints:int = 0;
+			totalPoints += handicapLevels * Constants.POINTS_PER_HANDICAP_LEVEL;
+			totalPoints += stepsWalked * Constants.POINTS_PER_STEP;
+			totalPoints += damageDealt * Constants.POINTS_PER_ATTACK_DAMAGE;
+			totalPoints += enemiesKOed * Constants.POINTS_PER_KO;
+			totalPoints += flagPoints;
+			// TODO: item points
+			return totalPoints;
+		}
+		
 		// UX things
 		
 		public function initUX():void
@@ -246,7 +273,7 @@ package
 			statStr.font = "Segoe";
 			statStr.color = 0x000000;
 			
-			var totalPoints:int = flagPoints;
+			var totalPoints:int = calculateTotalPoints();
 			pointsStr = new Text(totalPoints.toString() + "pts");
 			pointsStr.font = "Segoe";
 			pointsStr.color = 0x000000;

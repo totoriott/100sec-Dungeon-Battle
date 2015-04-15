@@ -73,6 +73,8 @@ package
 			
 			players = [];
 			
+			var maxPlayerLevel:int = 0;
+			
 			for (var i:int = 0; i < Constants.PLAYER_COUNT; i++)
 			{
 				var newPlayer:Player = new Player("Player " + (i+1), getEmptySpaceOnBoard());
@@ -80,7 +82,19 @@ package
 				for (var j:int = 0; j < Constants.HAND_CARD_LIMIT; j++)
 					newPlayer.giveCard(dealCardFromDeck());
 				
+				if (newPlayer.level > maxPlayerLevel) {
+					maxPlayerLevel = newPlayer.level;
+				}
+				
 				players.push(newPlayer);
+			}
+			
+			for (i = 0; i < Constants.PLAYER_COUNT; i++)
+			{ 
+				var player:Player = players[i];
+				player.setHandicapFromMaxLevel(maxPlayerLevel);
+				
+				player.initUX();
 			}
 		}
 		
@@ -662,10 +676,12 @@ package
 				}
 				else
 				{
+					var curPlayer:Player = players[playerTurn];
 					var newSquare:BoardPosition = playerWalk[0];
 					playerWalk = playerWalk.slice(1, playerWalk.length);
 					
-					players[playerTurn].moveToSpace(newSquare);
+					curPlayer.incrementStepsWalked(1);
+					curPlayer.moveToSpace(newSquare);
 					
 					if (getSpaceForPos(newSquare).type == Constants.BOARD_TRAP) {
 						// TODO: chance of evade

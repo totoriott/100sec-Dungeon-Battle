@@ -161,6 +161,10 @@ package
 		public static var ATK_ROLL_COUNT:int = 2;
 		public static var FLAG_BASE_POINTS:int = 250;
 		public static var FLAG_MULTIPLIERS:Array = [1, 1, 2, 4, 6, 8];
+		public static var POINTS_PER_STEP:int = 15;
+		public static var POINTS_PER_KO:int = 500;
+		public static var POINTS_PER_ATTACK_DAMAGE:int = 25;
+		public static var POINTS_PER_HANDICAP_LEVEL:int = 250;
 		
 		// Deck constants
 		public static var DECK_CARD_DATA:int = 0;
