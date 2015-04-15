@@ -43,7 +43,7 @@ package
 			initPlayers();
 			
 			playerTurn = players.length - 1;
-			changeState(Constants.GSTATE_SELECTCARD);
+			changeState(Constants.GSTATE_SELECTACTION);
 			
 			// TODO - decide first player
 		}
@@ -196,7 +196,7 @@ package
 		{
 			switch (newState) // do any Enter State logic
 			{
-				case Constants.GSTATE_SELECTCARD:
+				case Constants.GSTATE_SELECTACTION:
 					// "NEXT TURN"
 					// TODO: other turn start things
 					playerTurn++;
@@ -212,7 +212,9 @@ package
 					{
 						players[playerTurn].giveCard(dealCardFromDeck());
 					}
-						
+					break;
+					
+				case Constants.GSTATE_SELECTCARD:
 					// state-specific stuff
 					cardIndex = -1;
 					break;
@@ -255,6 +257,10 @@ package
 			
 			switch (gameState)
 			{
+				case Constants.GSTATE_SELECTACTION: // what will you do this turn
+					update_selectAction(inputArray);
+					break;
+					
 				case Constants.GSTATE_SELECTCARD: // player is picking a card to play
 					update_playerCard(inputArray);
 					break;
@@ -431,6 +437,10 @@ package
 			}
 			
 			return inputArray;
+		}
+		
+		private function update_selectAction(inputArray:Array):void {
+			changeState(Constants.GSTATE_SELECTCARD); // TODO: this state
 		}
 		
 		// handles updating for the game state where the player is picking what card to play when moving around the board
@@ -700,7 +710,7 @@ package
 			var curPlayer:Player = players[playerTurn];
 			curPlayer.finishTurn();
 			
-			changeState(Constants.GSTATE_SELECTCARD);
+			changeState(Constants.GSTATE_SELECTACTION);
 		}
 		
 		// a non-state update, for when you're holding down the move button and want to move the camera

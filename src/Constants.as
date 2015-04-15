@@ -8,12 +8,13 @@ package
 	{
 		// Game state
 		public static var GSTATE_GAMEOVER:int = -1;
-		public static var GSTATE_SELECTCARD:int = 0;
-		public static var GSTATE_DOROLL:int = 1;
-		public static var GSTATE_SELECTMOVE:int = 2;
-		public static var GSTATE_MOVING:int = 3;
-		public static var GSTATE_ACTIVATESPACE:int = 4;
-		public static var GSTATE_ENDTURN:int = 5;
+		public static var GSTATE_SELECTACTION:int = 0;
+		public static var GSTATE_SELECTCARD:int = 1;
+		public static var GSTATE_DOROLL:int = 2;
+		public static var GSTATE_SELECTMOVE:int = 3;
+		public static var GSTATE_MOVING:int = 4;
+		public static var GSTATE_ACTIVATESPACE:int = 5;
+		public static var GSTATE_ENDTURN:int = 6;
 		
 		// Graphics things
 		public static var FRAMES_BETWEEN_SQUARES_MOVED:int = 5;
@@ -26,8 +27,11 @@ package
 		public static var KEYMAP_FIRE1:int = Key.Z;
 		public static var KEYMAP_FIRE2:int = Key.X;
 		public static var KEYMAP_FIRE3:int = Key.C;
+		public static var KEYMAP_FIRE4:int = Key.A;
+		public static var KEYMAP_FIRE5:int = Key.S;
+		public static var KEYMAP_FIRE6:int = Key.D;
 		public static var KEYMAP_DEBUG:int = Key.R;
-		public static var KEYMAP_ARRAY:Array = [KEYMAP_LEFT, KEYMAP_RIGHT, KEYMAP_UP, KEYMAP_DOWN, KEYMAP_FIRE1, KEYMAP_FIRE2, KEYMAP_FIRE3, KEYMAP_DEBUG];
+		public static var KEYMAP_ARRAY:Array = [KEYMAP_LEFT, KEYMAP_RIGHT, KEYMAP_UP, KEYMAP_DOWN, KEYMAP_FIRE1, KEYMAP_FIRE2, KEYMAP_FIRE3, KEYMAP_FIRE4, KEYMAP_FIRE5, KEYMAP_FIRE6, KEYMAP_DEBUG];
 		
 		public static var INPUT_NEUTRAL:int = 0;
 		public static var INPUT_PRESSED:int = 1;
@@ -41,7 +45,10 @@ package
 		public static var KEY_FIRE1:int = 4;
 		public static var KEY_FIRE2:int = 5;
 		public static var KEY_FIRE3:int = 6;
-		public static var KEY_DEBUG:int = 7;
+		public static var KEY_FIRE4:int = 7;
+		public static var KEY_FIRE5:int = 8;
+		public static var KEY_FIRE6:int = 9;
+		public static var KEY_DEBUG:int = 10;
 				
 		// Player skill point enum
 		public static var SKILL_ATK:int = 0;
