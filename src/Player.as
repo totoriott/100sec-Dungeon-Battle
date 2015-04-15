@@ -137,6 +137,26 @@ package
 			}
 		}
 		
+		public function sufferFromTrap(value:int):void {
+			switch (value) {
+				case Constants.TRAP_DAMAGE:
+					// TODO: oh no!
+					break;
+					
+				case Constants.TRAP_EMPTY:
+					hand = hand.slice(0, 0); // now you have no more cards
+					break;
+					
+				case Constants.TRAP_LEG:
+					// TODO: oh no!
+					break;
+					
+				case Constants.TRAP_STUN:
+					// TODO: oh no!
+					break;
+			}
+		}
+		
 		public function prepareForTurn():void {
 			card_boardActivated = null;
 			cardBonus_movement = 0;

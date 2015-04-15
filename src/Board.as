@@ -641,7 +641,7 @@ package
 			switch (space.type)
 			{
 				case Constants.BOARD_TRAP:
-					// TODO: oh no!
+					curPlayer.sufferFromTrap(space.value);
 					
 					board[playerPos.row][playerPos.col].changeTo(Constants.BOARD_EMPTY, 0); // empty out the space
 					break;
