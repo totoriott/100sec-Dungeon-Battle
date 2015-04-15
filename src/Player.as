@@ -103,7 +103,7 @@ package
 		{
 			lastMovementRoll = [];
 			// TODO: display roll somewhere
-			lastMovementRoll.push(Math.ceil(FP.rand(6)));
+			lastMovementRoll.push(Math.ceil(FP.rand(5)+1));
 			return getMovementRollValue();
 		}
 
