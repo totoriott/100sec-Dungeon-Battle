@@ -589,6 +589,7 @@ package
 			if (newSquareSelected && isMoveableSpace(newSquare)) {
 				if (playerPossibleWalks[newSquare.row][newSquare.col].length > 0) { 
 					playerWalk = playerPossibleWalks[newSquare.row][newSquare.col][0];
+					//playerWalk = playerPossibleWalks[newSquare.row][newSquare.col][Math.floor(FP.rand(playerPossibleWalks[newSquare.row][newSquare.col].length))];
 				}
 			}
 		}

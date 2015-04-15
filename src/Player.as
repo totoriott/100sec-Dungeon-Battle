@@ -9,7 +9,7 @@ package
 	public class Player 
 	{
 		internal var level:int = 1;
-		internal var skillPoints:Array = [1, 1, 1, 1];
+		internal var skillPoints:Array = [1, 1, 6, 1];
 		
 		internal var name:String = "Nameless"; // TODO - funny default name
 		internal var hp:int = 10;
@@ -19,6 +19,7 @@ package
 		internal var items:Array = [];
 		internal var position:BoardPosition;
 		
+		internal var legDamage:Boolean = false;
 		internal var flagPoints:int = 0;
 		
 		internal var card_boardActivated:BoardCard;
@@ -65,6 +66,10 @@ package
 		
 		public function getMoveBonus():int
 		{
+			if (legDamage) { // grr
+				return 0;
+			}
+			
 			var move:int = skillPoints[Constants.SKILL_MOVE] / 3;
 			return move;
 		}
@@ -148,7 +153,8 @@ package
 					break;
 					
 				case Constants.TRAP_LEG:
-					// TODO: oh no!
+					legDamage = true;
+					initUX();
 					break;
 					
 				case Constants.TRAP_STUN:
@@ -196,6 +202,8 @@ package
 		
 		public function initUX():void
 		{
+			// TODO: UX for trap damage?
+			
 			headerStr = new Text(name + " - Lv. " + level.toString());
 			headerStr.font = "Segoe";
 			headerStr.color = 0x000000;
