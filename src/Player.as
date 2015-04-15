@@ -20,6 +20,7 @@ package
 		internal var position:BoardPosition;
 		internal var points:int = 0;
 		
+		internal var card_boardActivated:BoardCard;
 		internal var cardBonus_movement:int = 0;
 		
 		internal var lastMovementRoll:Array = [];
@@ -131,20 +132,30 @@ package
 		}
 		
 		public function prepareForTurn():void {
+			card_boardActivated = null;
 			cardBonus_movement = 0;
 		}
 		
 		// use a card when moving about the board
-		public function activateCardOnBoard(index:int):void
+		public function activateCardOnBoard(index:int):BoardCard
 		{
 			var card:BoardCard = hand[index];
+			card_boardActivated = card;
 			
 			// TODO: gain its effect
+			
+			// EXIT card is handled on return
 			if (card.type == Constants.CARD_MOVE) {
 				cardBonus_movement = card.value;
 			}
 			
 			hand.splice(index, 1); // remove the card from the hand	
+			
+			return card;
+		}
+		
+		public function getActivatedCardBoard():BoardCard {
+			return card_boardActivated;
 		}
 		
 		// UX things

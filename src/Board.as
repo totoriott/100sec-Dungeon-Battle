@@ -21,6 +21,7 @@ package
 		
 		private var gameState:int = Constants.GSTATE_GAMEOVER;
 		private var playerTurn:int = 0; // which player's turn it is
+		private var exitSpace:BoardPosition; // where is the exit
 	
 		private var cardIndex:int = 0; // index of the card the player is selecting
 		private var playerWalk:Vector.<BoardPosition>; // the squares that the player is walking this turn
@@ -100,6 +101,7 @@ package
 			// Place the exit
 			var emptySpace:BoardPosition = getEmptySpaceOnBoard();
 			board[emptySpace.row][emptySpace.col] = new BoardSpace(Constants.BOARD_EXIT, 0);
+			exitSpace = emptySpace.deepCopy();
 			
 			// Place the treasures
 			// TODO - put something in the treasures
@@ -479,6 +481,14 @@ package
 		
 		private function update_doRoll(inputArray:Array):void
 		{
+			var curPlayer:Player = players[playerTurn];
+			var playerCard:BoardCard = curPlayer.getActivatedCardBoard();
+			if (playerCard != null && playerCard.type == Constants.CARD_MOVE && playerCard.value == Constants.MOVE_EXIT) {
+				playerWalk.push(exitSpace);
+				changeState(Constants.GSTATE_MOVING);
+				return;
+			}
+			
 			changeState(Constants.GSTATE_SELECTMOVE);
 		}
 		
