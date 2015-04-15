@@ -21,7 +21,7 @@ package
 		public static var FRAMES_BETWEEN_SQUARES_MOVED:int = 5;
 		
 		public static var PLAYERHUD_TYPE_CARDS:int = 0;
-		public static var PLAYERHUD_TYPE_ITEMS:int = 0;
+		public static var PLAYERHUD_TYPE_ITEMS:int = 1;
 		public static var PLAYERHUD_TYPES:Array = [PLAYERHUD_TYPE_CARDS, PLAYERHUD_TYPE_ITEMS];
 		
 		// Key mappings
@@ -86,6 +86,9 @@ package
 		public static var BOARD_TRAP:int = 6;
 		// TODO - enemy?
 		
+		// Item/treasure type enum
+		public static var ITEM_NOEFFECT:int = 0;
+		
 		[Embed(source = 'assets/font/segoeui.ttf', embedAsCFF = "false", fontFamily = 'Segoe')] private static const FONT_SEGOE:Class;
 		
 		[Embed(source = 'assets/img/tile/blank.png')] private static const SRC_TILE_BLANK:Class;
@@ -146,7 +149,7 @@ package
 			[[new Image(SRC_CARD_TRAP_E), CARD_TRAP, TRAP_EMPTY], 5],
 			[[new Image(SRC_CARD_TRAP_L), CARD_TRAP, TRAP_LEG], 5],
 			[[new Image(SRC_CARD_TRAP_S), CARD_TRAP, TRAP_STUN], 5]
-			]
+			];
 		}
 		
 		// Game constants
@@ -202,7 +205,35 @@ package
 		[Embed(source = 'assets/img/card/trap_L.png')] private static const SRC_CARD_TRAP_L:Class;
 		[Embed(source = 'assets/img/card/trap_S.png')] private static const SRC_CARD_TRAP_S:Class;
 		
-		// TODO: implement points
+		// Item/treasure constants
+		[Embed(source = 'assets/img/item/0.png')] private static const SRC_ITEM_0:Class;
+		[Embed(source = 'assets/img/item/1.png')] private static const SRC_ITEM_1:Class;
+		[Embed(source = 'assets/img/item/2.png')] private static const SRC_ITEM_2:Class;
+		[Embed(source = 'assets/img/item/3.png')] private static const SRC_ITEM_3:Class;
+		[Embed(source = 'assets/img/item/4.png')] private static const SRC_ITEM_4:Class;
+		[Embed(source = 'assets/img/item/5.png')] private static const SRC_ITEM_5:Class;
+		[Embed(source = 'assets/img/item/6.png')] private static const SRC_ITEM_6:Class;
+		[Embed(source = 'assets/img/item/7.png')] private static const SRC_ITEM_7:Class;
+		[Embed(source = 'assets/img/item/8.png')] private static const SRC_ITEM_8:Class;
+		[Embed(source = 'assets/img/item/9.png')] private static const SRC_ITEM_9:Class;
+		
+		public static var TREASURE_DB:Array;
+		
+		public static function initTreasureDb():void {
+			// id, image, effect type, effect value, point value, resale value
+			TREASURE_DB = [
+				[0, new Image(SRC_ITEM_0), ITEM_NOEFFECT, 0, 1000, 100],
+				[1, new Image(SRC_ITEM_1), ITEM_NOEFFECT, 0, 1000, 100],
+				[2, new Image(SRC_ITEM_2), ITEM_NOEFFECT, 0, 1000, 100],
+				[3, new Image(SRC_ITEM_3), ITEM_NOEFFECT, 0, 1000, 100],
+				[4, new Image(SRC_ITEM_4), ITEM_NOEFFECT, 0, 1000, 100],
+				[5, new Image(SRC_ITEM_5), ITEM_NOEFFECT, 0, 1000, 100],
+				[6, new Image(SRC_ITEM_6), ITEM_NOEFFECT, 0, 1000, 100],
+				[7, new Image(SRC_ITEM_7), ITEM_NOEFFECT, 0, 1000, 100],
+				[8, new Image(SRC_ITEM_8), ITEM_NOEFFECT, 0, 1000, 100],
+				[9, new Image(SRC_ITEM_9), ITEM_NOEFFECT, 0, 1000, 100],
+			];
+		}
 		
 		// TODO - doesn't deep copy object inside array but yolo
 		public static function deepCopyArray(inArray:Array):Array

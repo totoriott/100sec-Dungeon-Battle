@@ -24,6 +24,7 @@ package
 		
 		private var playerTurn:int = 0; // which player's turn it is
 		private var exitSpace:BoardPosition; // where is the exit
+		private var keyItemId:int = 0; // which boarditem ID is the key item to win
 	
 		private var cardIndex:int = 0; // index of the card the player is selecting
 		private var playerWalk:Vector.<BoardPosition>; // the squares that the player is walking this turn
@@ -122,11 +123,23 @@ package
 			exitSpace = emptySpace.deepCopy();
 			
 			// Place the treasures
-			// TODO - put something in the treasures
+			var allTreasureIdsOnBoard:Array = [];
 			for (i = 0; i < Constants.BOARD_BOX_COUNT; i++)
 			{
+				// pick a treasure that's not on the board already
+				// TODO: weighted rarity
+				var randomTreasureId:int = FP.choose(Constants.TREASURE_DB)[0];
+				while (allTreasureIdsOnBoard.indexOf(randomTreasureId) != -1) {
+					randomTreasureId = FP.choose(Constants.TREASURE_DB)[0];
+				}
+				allTreasureIdsOnBoard.push(randomTreasureId);
+				
+				if (i == 0) {
+					keyItemId = randomTreasureId;
+				}
+				
 				emptySpace = getEmptySpaceOnBoard();
-				board[emptySpace.row][emptySpace.col] = new BoardSpace(Constants.BOARD_BOX, 0);
+				board[emptySpace.row][emptySpace.col] = new BoardSpace(Constants.BOARD_BOX, randomTreasureId);
 			}
 			
 			// Place the flags
@@ -415,7 +428,7 @@ package
 				// adjust for the viewport
 				spaceCopy.row -= startRow;
 				spaceCopy.col -= startCol;
-				var color = 0x0000FF;
+				var color:uint = 0x0000FF;
 				if (playerWalk.indexOf(space) == playerWalk.length - 1) // last tile in walk
 					color = 0x00FFFF;
 				if (spaceCopy.row >= 0 && spaceCopy.row < viewRows)
@@ -434,6 +447,7 @@ package
 				// TODO - move into own class so it's not massive lag
 				player = players[i];
 				var cards:Vector.<BoardCard> = player.getCards();
+				var items:Vector.<BoardItem> = player.getItems();
 				
 				var playerY:int = hudY + (playerHudHeight + playerHudMargin) * i;
 				
@@ -467,6 +481,33 @@ package
 						break;
 						
 					case Constants.PLAYERHUD_TYPE_ITEMS:
+						// draw their items
+						// TODO: highlight key items
+						if (items.length <= 4) { // 4 items or less 
+							for (j = 0; j < items.length; j++) {
+								var item:BoardItem = items[j];
+								var itemImage:Image = item.image;
+								itemImage.scale = 0.5; // TODO - hack while i figure card size out (128 / 2 = 64)
+								var itemY:int = playerY + 40;
+								
+								if (item.id == keyItemId && item.fromThisBoard) {
+									Draw.rect(hudX + 72 * j, itemY, 72, 72, 0xFFFF00, 1);
+								}
+								Draw.graphic(itemImage, hudX + 72 * j, itemY);
+							}
+						} else { // 8 items or less (TODO: if you have more then whoops)
+							for (j = 0; j < items.length; j++) {
+								item = items[j];
+								itemImage = item.image;
+								itemImage.scale = 0.25; // TODO - hack while i figure card size out (128 / 4 = 32)
+								itemY = playerY + 40;
+								
+								if (item.id == keyItemId && item.fromThisBoard) {
+									Draw.rect(hudX + 36 * j, itemY, 36, 36, 0xFFFF00, 1);
+								}
+								Draw.graphic(itemImage, hudX + 36 * j, itemY);
+							}
+						} 
 						break;
 				}
 				
@@ -716,8 +757,9 @@ package
 					break;
 					
 				case Constants.BOARD_BOX:
-					// TODO: get the box
-					
+					var treasureId:int = space.value;
+					// TODO: check if it's key treasure and do things
+					curPlayer.giveTreasureWithId(treasureId);					
 					board[playerPos.row][playerPos.col].changeTo(Constants.BOARD_EMPTY, 0); // empty out the space
 					break;
 					

@@ -16,7 +16,7 @@ package
 		internal var credits:int = 0;
 		
 		internal var hand:Vector.<BoardCard>;
-		internal var items:Array = [];
+		internal var items:Vector.<BoardItem>;
 		internal var position:BoardPosition;
 		
 		internal var legDamage:Boolean = false;
@@ -45,6 +45,7 @@ package
 			name = mName;
 			position = mPosition.deepCopy();
 			hand = new Vector.<BoardCard>();
+			items = new Vector.<BoardItem>();
 			
 			initUX();
 		}		
@@ -100,6 +101,10 @@ package
 		public function getCards():Vector.<BoardCard>
 		{
 			return hand; // TODO: do i need to deep copy lol
+		}
+		
+		public function getItems():Vector.<BoardItem> {
+			return items; // TODO: does this need deep copy
 		}
 		
 		public function getMovementRoll():Array  
@@ -188,6 +193,12 @@ package
 					stunTurnCounter = 2; // this turn and next
 					break;
 			}
+		}
+		
+		public function giveTreasureWithId(treasureId:int):void {
+			var newItem:BoardItem = BoardItem.BoardItemFromId(treasureId);
+			newItem.fromThisBoard = true;
+			items.push(newItem);
 		}
 		
 		public function prepareForTurn():void {
