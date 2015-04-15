@@ -483,10 +483,25 @@ package
 		{
 			var curPlayer:Player = players[playerTurn];
 			var playerCard:BoardCard = curPlayer.getActivatedCardBoard();
-			if (playerCard != null && playerCard.type == Constants.CARD_MOVE && playerCard.value == Constants.MOVE_EXIT) {
-				playerWalk.push(exitSpace);
-				changeState(Constants.GSTATE_MOVING);
-				return;
+			if (playerCard != null) {
+				// if it was an exit card
+				if (playerCard.type == Constants.CARD_MOVE && playerCard.value == Constants.MOVE_EXIT) {
+					playerWalk.push(exitSpace);
+					changeState(Constants.GSTATE_MOVING);
+					return;
+				}
+				
+				// if it was a trap card
+				if (playerCard.type == Constants.CARD_TRAP) {
+					var playerPos:BoardPosition = curPlayer.getPosition();
+					var curSpace:BoardSpace = getSpace(playerPos.row, playerPos.col);
+					// place the trap on the board
+					if (curSpace.type != Constants.BOARD_EMPTY) {
+						trace("Placing a trap on nonempty space??");
+					}
+					
+					curSpace.changeTo(Constants.BOARD_TRAP, playerCard.value);
+				}
 			}
 			
 			changeState(Constants.GSTATE_SELECTMOVE);
@@ -599,7 +614,11 @@ package
 					
 					players[playerTurn].moveToSpace(newSquare);
 					
-					// TODO: do traps
+					if (getSpaceForPos(newSquare).type == Constants.BOARD_TRAP) {
+						// TODO: chance of evade
+						
+						playerWalk = playerWalk.slice(0, 0); // whoops it seems your journey has ended here
+					}
 					
 					moveTimer = Constants.FRAMES_BETWEEN_SQUARES_MOVED;
 				}
@@ -621,6 +640,12 @@ package
 			
 			switch (space.type)
 			{
+				case Constants.BOARD_TRAP:
+					// TODO: oh no!
+					
+					board[playerPos.row][playerPos.col].changeTo(Constants.BOARD_EMPTY, 0); // empty out the space
+					break;
+					
 				case Constants.BOARD_BOX:
 					// TODO: get the box
 					
@@ -817,6 +842,10 @@ package
 		// i can't believe as3 won't type this properly otherwise
 		private function getSpace(row:int, col:int):BoardSpace {
 			return board[row][col];
+		}
+		
+		private function getSpaceForPos(pos:BoardPosition):BoardSpace {
+			return board[pos.row][pos.col];
 		}
 	}
 }

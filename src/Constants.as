@@ -53,10 +53,10 @@ package
 		public static var CARD_DEF:int = 1;
 		public static var CARD_MOVE:int = 2;
 		public static var CARD_TRAP:int = 3;
-		public static var TRAP_EMPTY:int = -1;
-		public static var TRAP_DAMAGE:int = -2;
-		public static var TRAP_STUN:int = -3;
-		public static var TRAP_LEG:int = -4;
+		public static var TRAP_EMPTY:int = 0; // these have to be zero-indexed for board draw purposes
+		public static var TRAP_DAMAGE:int = 1;
+		public static var TRAP_STUN:int = 2;
+		public static var TRAP_LEG:int = 3;
 		public static var ATK_C:int = -1;
 		public static var ATK_S:int = -2;
 		public static var DEF_A:int = -1;
@@ -70,6 +70,7 @@ package
 		public static var BOARD_EXIT:int = 3;
 		public static var BOARD_FLAG:int = 4;
 		public static var BOARD_BOX:int = 5;
+		public static var BOARD_TRAP:int = 6;
 		// TODO - enemy?
 		
 		[Embed(source = 'assets/font/segoeui.ttf', embedAsCFF = "false", fontFamily = 'Segoe')] private static const FONT_SEGOE:Class;
@@ -85,6 +86,7 @@ package
 		[Embed(source = 'assets/img/tile/player_1.png')] private static const SRC_TILE_PLAYER2:Class;
 		[Embed(source = 'assets/img/tile/player_2.png')] private static const SRC_TILE_PLAYER3:Class;
 		[Embed(source = 'assets/img/tile/player_3.png')] private static const SRC_TILE_PLAYER4:Class;
+		[Embed(source = 'assets/img/tile/trap.png')] private static const SRC_TILE_TRAP:Class;
 		[Embed(source = 'assets/img/tile/treasure.png')] private static const SRC_TILE_BOX:Class;
 		
 		public static var BOARD_SPRITES:Array;
@@ -98,7 +100,8 @@ package
 				[new Image(SRC_TILE_PLAYER1), new Image(SRC_TILE_PLAYER2), new Image(SRC_TILE_PLAYER3), new Image(SRC_TILE_PLAYER4)], //DEPRECATED
 				[new Image(SRC_TILE_EXIT)],	
 				[new Image(SRC_TILE_FLAG1), new Image(SRC_TILE_FLAG2), new Image(SRC_TILE_FLAG3), new Image(SRC_TILE_FLAG4)],
-				[new Image(SRC_TILE_BOX)]
+				[new Image(SRC_TILE_BOX)],
+				[new Image(SRC_TILE_TRAP), new Image(SRC_TILE_TRAP), new Image(SRC_TILE_TRAP), new Image(SRC_TILE_TRAP)]
 					];
 					
 			PLAYER_SPRITES = [new Image(SRC_TILE_PLAYER1), new Image(SRC_TILE_PLAYER2), new Image(SRC_TILE_PLAYER3), new Image(SRC_TILE_PLAYER4)];

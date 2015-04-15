@@ -18,7 +18,8 @@ package
 		internal var hand:Vector.<BoardCard>;
 		internal var items:Array = [];
 		internal var position:BoardPosition;
-		internal var points:int = 0;
+		
+		internal var flagPoints:int = 0;
 		
 		internal var card_boardActivated:BoardCard;
 		internal var cardBonus_movement:int = 0;
@@ -118,6 +119,11 @@ package
 			position = newSpace;
 		}
 		
+		public function awardFlagPoints(pts:int):void {
+			flagPoints += pts;
+			initUX();
+		}
+		
 		// TODO - you could sort the hands even though you hella don't in battle hunter
 		public function giveCard(newCard:BoardCard):void
 		{
@@ -142,12 +148,20 @@ package
 			var card:BoardCard = hand[index];
 			card_boardActivated = card;
 			
-			// TODO: gain its effect
-			
 			// EXIT card is handled on return
 			if (card.type == Constants.CARD_MOVE) {
 				cardBonus_movement = card.value;
 			}
+			
+			if (card.type == Constants.CARD_DEF) {
+				// TODO: increase trap evasion
+			}
+			
+			if (card.type == Constants.CARD_TRAP) {
+				// TODO: place trap
+			}
+			
+			// ATK cards should not be usable on board
 			
 			hand.splice(index, 1); // remove the card from the hand	
 			
@@ -174,7 +188,8 @@ package
 			statStr.font = "Segoe";
 			statStr.color = 0x000000;
 			
-			pointsStr = new Text(points.toString() + "pts");
+			var totalPoints:int = flagPoints;
+			pointsStr = new Text(totalPoints.toString() + "pts");
 			pointsStr.font = "Segoe";
 			pointsStr.color = 0x000000;
 		}
