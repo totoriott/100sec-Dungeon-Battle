@@ -453,12 +453,15 @@ package
 				
 				// TODO - letters are cut off because hilarity
 				var headerStr:Text = player.getHeaderStr();
-				if (i == playerTurn)
-					headerStr.color = 0xFF0000;
-				else
-					headerStr.color = 0x000000;
+				headerStr.color = 0x000000;
 					
 				headerStr.alpha = 1;
+				if (playerHasKeyItem(player)) { // draw highlight if they have key item 
+					Draw.rect(hudX, playerY+8, 208, 16, 0xFFFF00, 1);
+				}
+				if (i == playerTurn) { // draw highlight if it's their turn
+					Draw.rect(hudX, playerY+8, 104, 16, Constants.PLAYER_IMAGECOLORS[i], 1);
+				}
 				Draw.graphic(headerStr, hudX, playerY);
 				Draw.graphic(player.getHpStr(), hudX + 208, playerY);
 				Draw.graphic(player.getStatStr(), hudX, playerY + 16);
@@ -784,7 +787,12 @@ package
 					break;
 					
 				case Constants.BOARD_EXIT:
-					// TODO: key item check
+					if (playerHasKeyItem(players[playerTurn])) {
+						// TODO: you win!!
+						changeState(Constants.GSTATE_GAMEOVER); // TODO: end of game things
+						playerTurn = -1;
+						return;
+					}
 					
 					// if you don't have the key item, jump to a random location
 					players[playerTurn].moveToSpace(getEmptySpaceOnBoard()); 
@@ -969,6 +977,18 @@ package
 		
 		private function getSpaceForPos(pos:BoardPosition):BoardSpace {
 			return board[pos.row][pos.col];
+		}
+		
+		private function playerHasKeyItem(player:Player):Boolean {
+			var items:Vector.<BoardItem> = player.getItems();
+			for (var i:int = 0; i < items.length; i++) {
+				var item:BoardItem = items[i];
+				if (item.fromThisBoard && item.id == keyItemId) {
+					return true;
+				}
+			}
+			
+			return false;
 		}
 	}
 }

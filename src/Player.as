@@ -257,7 +257,12 @@ package
 			totalPoints += damageDealt * Constants.POINTS_PER_ATTACK_DAMAGE;
 			totalPoints += enemiesKOed * Constants.POINTS_PER_KO;
 			totalPoints += flagPoints;
-			// TODO: item points
+			for (var i:int = 0; i < items.length; i++) {
+				var item:BoardItem = items[i];
+				if (item.fromThisBoard) {
+					totalPoints += item.pointValue;
+				}
+			}
 			return totalPoints;
 		}
 		

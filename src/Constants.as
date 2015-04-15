@@ -19,6 +19,7 @@ package
 		
 		// Graphics things
 		public static var FRAMES_BETWEEN_SQUARES_MOVED:int = 5;
+		public static var PLAYER_IMAGECOLORS:Array = [0xFF8888, 0x8888FF, 0xFFFF88, 0x88FF88];
 		
 		public static var PLAYERHUD_TYPE_CARDS:int = 0;
 		public static var PLAYERHUD_TYPE_ITEMS:int = 1;
