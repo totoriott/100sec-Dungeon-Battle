@@ -23,9 +23,9 @@ package
 		private var playerTurn:int = 0; // which player's turn it is
 	
 		private var cardIndex:int = 0; // index of the card the player is selecting
-		private var playerWalk:Array = []; // the squares that the player is walking this turn
-		private var playerPossibleMoves:Array = []; // the squares that the player could walk to this turn
-		private var playerPossibleWalks:Array = []; // the board, where each square is possible walks to that square this turn
+		private var playerWalk:Vector.<BoardPosition>; // the squares that the player is walking this turn
+		private var playerPossibleMoves:Vector.<BoardPosition>; // the squares that the player could walk to this turn
+		private var playerPossibleWalks:Vector.<Vector.<Vector.<Vector.<BoardPosition>>>>; // the board, where each square is possible walks to that square this turn
 		
 		private var moveTimer:int = 0; 
 		
@@ -93,27 +93,27 @@ package
 				board[i] = new Vector.<BoardSpace>(boardCols, true);
 				for (var j:int = 0; j < boardCols; j++)
 				{
-					board[i][j] = new BoardSpace(Constants.BOARD_EMPTY, 0, i, j);
+					board[i][j] = new BoardSpace(Constants.BOARD_EMPTY, 0);
 				}
 			}
 			
 			// Place the exit
-			var emptySpace:Array = getEmptySpaceOnBoard();
-			board[emptySpace[0]][emptySpace[1]] = new BoardSpace(Constants.BOARD_EXIT, 0, emptySpace[0], emptySpace[1]);
+			var emptySpace:BoardPosition = getEmptySpaceOnBoard();
+			board[emptySpace.row][emptySpace.col] = new BoardSpace(Constants.BOARD_EXIT, 0);
 			
 			// Place the treasures
 			// TODO - put something in the treasures
 			for (i = 0; i < Constants.BOARD_BOX_COUNT; i++)
 			{
 				emptySpace = getEmptySpaceOnBoard();
-				board[emptySpace[0]][emptySpace[1]] = new BoardSpace(Constants.BOARD_BOX, 0, emptySpace[0], emptySpace[1]);
+				board[emptySpace.row][emptySpace.col] = new BoardSpace(Constants.BOARD_BOX, 0);
 			}
 			
 			// Place the flags
 			for (i = 0; i < Constants.BOARD_FLAG_COUNT; i++)
 			{
 				emptySpace = getEmptySpaceOnBoard();
-				board[emptySpace[0]][emptySpace[1]] = new BoardSpace(Constants.BOARD_FLAG, i, emptySpace[0], emptySpace[1]);
+				board[emptySpace.row][emptySpace.col] = new BoardSpace(Constants.BOARD_FLAG, i);
 			}
 		}
 		
@@ -131,13 +131,13 @@ package
 		}
 		
 		// Gets a random empty board location and returns it as an x-y pair
-		public function getEmptySpaceOnBoard():Array
+		public function getEmptySpaceOnBoard():BoardPosition
 		{
 			var row:int = -1;
 			var col:int = -1;
 			var tries:int = 0;
 			
-			while (row < 0 || col < 0 || getSpace(row, col).type != Constants.BOARD_EMPTY || isPlayerSpace([row, col]))
+			while (row < 0 || col < 0 || getSpace(row, col).type != Constants.BOARD_EMPTY || isPlayerSpace(new BoardPosition(row, col)))
 			{
 				row = FP.rand(board.length);
 				col = FP.rand(board[0].length);
@@ -152,17 +152,17 @@ package
 				}
 			}
 			
-			return [row, col];
+			return new BoardPosition(row, col);
 		}
 		
 		// checks if you're colliding with a player
-		public function isPlayerSpace(space:Array):Boolean
+		public function isPlayerSpace(space:BoardPosition):Boolean
 		{
 			for (var i:int = 0; i < players.length; i++)
 			{
 				var player:Player = players[i];
-				var playerPos:Array = player.getPosition();
-				if (space[0] == playerPos[0] && space[1] == playerPos[1])
+				var playerPos:BoardPosition = player.getPosition();
+				if (space.row == playerPos.row && space.col == playerPos.col)
 					return true;
 			}
 			
@@ -170,11 +170,11 @@ package
 		}
 		
 		// returns true if you can move to that space
-		public function isMoveableSpace(space:Array):Boolean
+		public function isMoveableSpace(space:BoardPosition):Boolean
 		{
-			if (space[0] < 0 || space[0] >= board.length)
+			if (space.row < 0 || space.row >= board.length)
 				return false;
-			if (space[1] < 0 || space[1] >= board[0].length)
+			if (space.col < 0 || space.col >= board[0].length)
 				return false;
 			if (isPlayerSpace(space)) // can't move to where other players are
 				return false;
@@ -183,7 +183,7 @@ package
 			var unmovableSpaces:Array = [Constants.BOARD_NULL];
 			for each (var spaceType:int in unmovableSpaces)
 			{
-				if (getSpace(space[0],space[1]).type == spaceType)
+				if (getSpace(space.row,space.col).type == spaceType)
 					return false;
 			}
 
@@ -220,7 +220,7 @@ package
 					}
 					
 					//state-specific stuff
-					playerWalk = []; // the squares the current player is walking this turn
+					playerWalk = new Vector.<BoardPosition>(); // the squares the current player is walking this turn
 					var playerRoll:int = players[playerTurn].doMovementRoll();
 					
 					playerPossibleMoves = getPlayerPossibleMoves(); // the squares the current player could move to this turn
@@ -230,7 +230,7 @@ package
 					break;
 					
 				case Constants.GSTATE_MOVING:
-					playerPossibleMoves = [];
+					playerPossibleMoves = new Vector.<BoardPosition>();
 					moveTimer = Constants.FRAMES_BETWEEN_SQUARES_MOVED; // set the time for each move
 					break;
 					
@@ -321,42 +321,42 @@ package
 			for (i = 0; i < players.length; i++)
 			{
 				var player:Player = players[i];
-				var playerPos:Array = player.getPosition();
+				var playerPos:BoardPosition = player.getPosition();
 				
 				// adjust for the viewport
-				playerPos[0] -= startRow;
-				playerPos[1] -= startCol;
-				if (playerPos[0] >= 0 && playerPos[0] < viewRows)
-					if (playerPos[1] >= 0 && playerPos[1] < viewCols)
-						Draw.graphic(Constants.PLAYER_SPRITES[i], boardX + playerPos[1] * tileSize, boardY + playerPos[0] * tileSize);
+				playerPos.row -= startRow;
+				playerPos.col -= startCol;
+				if (playerPos.row >= 0 && playerPos.row < viewRows)
+					if (playerPos.col >= 0 && playerPos.col < viewCols)
+						Draw.graphic(Constants.PLAYER_SPRITES[i], boardX + playerPos.col * tileSize, boardY + playerPos.row * tileSize);
 			}
 			
 			// draw board highlights and stuff
-			for each (var space:Array in playerPossibleMoves) // draw the path the player can walk to
+			for each (var space:BoardPosition in playerPossibleMoves) // draw the path the player can walk to
 			{
 				// TODO - make this nicer or not hardcoded (this is just stolen from below)
-				var spaceCopy:Array = Constants.deepCopyArray(space);
+				var spaceCopy:BoardPosition = space.deepCopy();
 				// adjust for the viewport
-				spaceCopy[0] -= startRow;
-				spaceCopy[1] -= startCol;
-				if (spaceCopy[0] >= 0 && spaceCopy[0] < viewRows)
-					if (spaceCopy[1] >= 0 && spaceCopy[1] < viewCols)
-						Draw.rect(boardX + spaceCopy[1] * tileSize, boardY + spaceCopy[0] * tileSize, tileSize, tileSize, 0x0000FF, 0.25);
+				spaceCopy.row -= startRow;
+				spaceCopy.col -= startCol;
+				if (spaceCopy.row >= 0 && spaceCopy.row < viewRows)
+					if (spaceCopy.col >= 0 && spaceCopy.col < viewCols)
+						Draw.rect(boardX + spaceCopy.col * tileSize, boardY + spaceCopy.row * tileSize, tileSize, tileSize, 0x0000FF, 0.25);
 			}
 			
 			for each (space in playerWalk) // draw the path the player is walking
 			{
 				// TODO - make this nicer or not hardcoded
-				spaceCopy = Constants.deepCopyArray(space);
+				spaceCopy = space.deepCopy();
 				// adjust for the viewport
-				spaceCopy[0] -= startRow;
-				spaceCopy[1] -= startCol;
+				spaceCopy.row -= startRow;
+				spaceCopy.col -= startCol;
 				var color = 0x0000FF;
 				if (playerWalk.indexOf(space) == playerWalk.length - 1) // last tile in walk
 					color = 0x00FFFF;
-				if (spaceCopy[0] >= 0 && spaceCopy[0] < viewRows)
-					if (spaceCopy[1] >= 0 && spaceCopy[1] < viewCols)
-						Draw.rect(boardX + spaceCopy[1] * tileSize, boardY + spaceCopy[0] * tileSize, tileSize, tileSize, color, 0.5);
+				if (spaceCopy.row >= 0 && spaceCopy.row < viewRows)
+					if (spaceCopy.col >= 0 && spaceCopy.col < viewCols)
+						Draw.rect(boardX + spaceCopy.col * tileSize, boardY + spaceCopy.row * tileSize, tileSize, tileSize, color, 0.5);
 			}
 			
 			// draw the HUD
@@ -490,12 +490,12 @@ package
 			
 			var curPlayer:Player = players[playerTurn];
 			var newSquareSelected:Boolean = true;
-			var newSquare:Array = [ -99, -99]; // the square which we will start moving from
-			var playerSpace:Array = players[playerTurn].getPosition();
+			var newSquare:BoardPosition = new BoardPosition(-99, -99); // the square which we will start moving from
+			var playerSpace:BoardPosition = players[playerTurn].getPosition();
 			if (playerWalk.length == 0)
 				newSquare = playerSpace;
 			else
-				newSquare = Constants.deepCopyArray(playerWalk[playerWalk.length - 1]);
+				newSquare = playerWalk[playerWalk.length - 1].deepCopy();
 
 			if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED)
 			{
@@ -510,13 +510,13 @@ package
 				return;
 			}
 			else if (inputArray[Constants.KEY_LEFT] == Constants.INPUT_PRESSED) // otherwise if they are still selecting their move
-				newSquare[1] -= 1;
+				newSquare.col -= 1;
 			else if (inputArray[Constants.KEY_RIGHT] == Constants.INPUT_PRESSED)
-				newSquare[1] += 1;
+				newSquare.col += 1;
 			else if (inputArray[Constants.KEY_UP] == Constants.INPUT_PRESSED)
-				newSquare[0] -= 1;
+				newSquare.row -= 1;
 			else if (inputArray[Constants.KEY_DOWN] == Constants.INPUT_PRESSED)
-				newSquare[0] += 1;
+				newSquare.row += 1;
 			else	
 				newSquareSelected = false; // if we didn't input anything we don't really care
 			
@@ -526,7 +526,7 @@ package
 			{
 				if (newSquareSelected) // check to see if you zeroed out your move
 				{
-					if (newSquare[0] == playerSpace[0] && newSquare[1] == playerSpace[1]) //if you backtraced to the start
+					if (newSquare.row == playerSpace.row && newSquare.col == playerSpace.col) //if you backtraced to the start
 						playerWalk = playerWalk.slice(0, 0); // clear the walk
 				}
 				
@@ -538,7 +538,7 @@ package
 					for (var i:int = 0; i < playerWalk.length - 1; i++) // don't truncate last square
 					{
 						var walkSpace:Array = playerWalk[i];
-						if (walkSpace[0] == newSquare[0] && walkSpace[1] == newSquare[1])
+						if (walkSpace.row == newSquare.row && walkSpace.col == newSquare.col)
 						{
 							playerWalk = playerWalk.slice(0, i + 1);
 							break;
@@ -554,14 +554,13 @@ package
 			
 			if (newSquareSelected) // check to see if you zeroed out your move
 			{
-				if (newSquare[0] == playerSpace[0] && newSquare[1] == playerSpace[1]) //if you backtraced to the start
+				if (newSquare.row == playerSpace.row && newSquare.col == playerSpace.col) //if you backtraced to the start
 					playerWalk = playerWalk.slice(0, 0); // clear the walk
 			}
 				
 			if (newSquareSelected && isMoveableSpace(newSquare)) {
-				if (playerPossibleWalks[newSquare[0]][newSquare[1]].length > 0) { 
-					var thing:Array = playerPossibleWalks[newSquare[0]][newSquare[1]];
-					playerWalk = playerPossibleWalks[newSquare[0]][newSquare[1]][0];
+				if (playerPossibleWalks[newSquare.row][newSquare.col].length > 0) { 
+					playerWalk = playerPossibleWalks[newSquare.row][newSquare.col][0];
 				}
 			}
 		}
@@ -582,7 +581,7 @@ package
 				}
 				else
 				{
-					var newSquare:Array = playerWalk[0];
+					var newSquare:BoardPosition = playerWalk[0];
 					playerWalk = playerWalk.slice(1, playerWalk.length);
 					
 					players[playerTurn].moveToSpace(newSquare);
@@ -603,23 +602,23 @@ package
 			
 			// no messing with the camera here
 			
-			var playerPos:Array = players[playerTurn].getPosition();
-			var space:BoardSpace = getSpace(playerPos[0], playerPos[1]).deepCopy();
+			var playerPos:BoardPosition = players[playerTurn].getPosition();
+			var space:BoardSpace = getSpace(playerPos.row, playerPos.col).deepCopy();
 			
 			switch (space.type)
 			{
 				case Constants.BOARD_BOX:
 					// TODO: get the box
 					
-					board[playerPos[0]][playerPos[1]].changeTo(Constants.BOARD_EMPTY, 0); // empty out the space
+					board[playerPos.row][playerPos.col].changeTo(Constants.BOARD_EMPTY, 0); // empty out the space
 					break;
 					
 				case Constants.BOARD_FLAG:
 					// TODO: get the flag
 					
-					var newFlag:Array = getEmptySpaceOnBoard();
-					board[playerPos[0]][playerPos[1]].changeTo(Constants.BOARD_EMPTY, 0); // empty out the old space
-					board[newFlag[0]][newFlag[1]].changeTo(Constants.BOARD_FLAG, space.value); // jump the flag to the new place
+					var newFlag:BoardPosition = getEmptySpaceOnBoard();
+					board[playerPos.row][playerPos.col].changeTo(Constants.BOARD_EMPTY, 0); // empty out the old space
+					board[newFlag.row][newFlag.col].changeTo(Constants.BOARD_FLAG, space.value); // jump the flag to the new place
 					break;
 					
 				case Constants.BOARD_EXIT:
@@ -659,13 +658,12 @@ package
 			}
 		}
 		
-		private function getPlayerPossibleMoves():Array {
+		private function getPlayerPossibleMoves():Vector.<BoardPosition> {
 			var curPlayer:Player = players[playerTurn];
-			var curPosition:Array = curPlayer.getPosition();
+			var curPosition:BoardPosition = curPlayer.getPosition();
 			var playerRoll:int = curPlayer.getMovementRollValue(); 
 			
 			var dfsStack:Array = [];
-			var possibleSpaces:Array = [];
 			
 			var markedSpaces:Array = new Array(board.length);
 			for (var i:int = 0; i < board.length; i++)
@@ -678,67 +676,79 @@ package
 			}
 			
 			// init possible walks (this is used to determine how you walks
-			playerPossibleWalks = new Array(board.length);
+			playerPossibleWalks = new Vector.<Vector.<Vector.<Vector.<BoardPosition>>>>(board.length, true);
 			for (i = 0; i < board.length; i++)
 			{
-				playerPossibleWalks[i] = new Array(board[0].length);
+				playerPossibleWalks[i] = new Vector.<Vector.<Vector.<BoardPosition>>>(board[0].length);
 				for (j = 0; j < board[0].length; j++)
 				{
-					playerPossibleWalks[i][j] = [];
+					playerPossibleWalks[i][j] = new Vector.<Vector.<BoardPosition>>();
 				}
 			}
 			
 			// TODO: logic got bad because of reasons
 			
-			var nextPos:Array = [[curPosition[0] - 1, curPosition[1]]];
-			dfsStack.push([curPosition[0] - 1, curPosition[1], nextPos]); 
+			var startPos:BoardPosition = new BoardPosition(curPosition.row - 1, curPosition.col);
+			var startWalk:Vector.<BoardPosition> = new Vector.<BoardPosition>();
+			startWalk.push(startPos);
+			dfsStack.push([startPos, startWalk]); 
 			
-			nextPos = [[curPosition[0] + 1, curPosition[1]]];
-			dfsStack.push([curPosition[0] + 1, curPosition[1], nextPos]); 
+			startPos = new BoardPosition(curPosition.row + 1, curPosition.col);
+			startWalk = new Vector.<BoardPosition>();
+			startWalk.push(startPos);
+			dfsStack.push([startPos, startWalk]); 
 			
-			nextPos = [[curPosition[0], curPosition[1] - 1]];
-			dfsStack.push([curPosition[0], curPosition[1] - 1, nextPos]); 
+			startPos = new BoardPosition(curPosition.row, curPosition.col - 1);
+			startWalk = new Vector.<BoardPosition>();
+			startWalk.push(startPos);
+			dfsStack.push([startPos, startWalk]); 
 			
-			nextPos = [[curPosition[0], curPosition[1] + 1]];
-			dfsStack.push([curPosition[0], curPosition[1] + 1, nextPos]); 
+			startPos = new BoardPosition(curPosition.row, curPosition.col + 1);
+			startWalk = new Vector.<BoardPosition>();
+			startWalk.push(startPos);
+			dfsStack.push([startPos, startWalk]); 
 			
 			while (dfsStack.length > 0) {
 				var curNode:Array = dfsStack.pop();
-				var curWalk:Array = curNode[2];
+				var curWalk:Vector.<BoardPosition> = curNode[1];
 
 				if (curWalk.length <= playerRoll) { // spaces left to move (yes this is off by one because of bad loop logic)
-					var curSpace:Array = curNode.splice(0, 2);
+					var curSpace:BoardPosition = curNode[0];
 					if (isMoveableSpace(curSpace)) {
-						markedSpaces[curSpace[0]][curSpace[1]] = 1; // for now just mark 1 to indicate it can be traveled to
-						playerPossibleWalks[curSpace[0]][curSpace[1]].push(curWalk);
+						markedSpaces[curSpace.row][curSpace.col] = 1; // for now just mark 1 to indicate it can be traveled to
+						playerPossibleWalks[curSpace.row][curSpace.col].push(curWalk);
 						
-						var newWalk:Array = Constants.deepCopyArray(curWalk);
-						newWalk.push([curSpace[0] - 1, curSpace[1]]);
-						dfsStack.push([curSpace[0] - 1, curSpace[1], newWalk]); 
+						var newPos:BoardPosition = new BoardPosition(curSpace.row - 1, curSpace.col);
+						var newWalk:Vector.<BoardPosition> = Constants.deepCopyBoardPositionVector(curWalk);
+						newWalk.push(newPos);
+						dfsStack.push([newPos, newWalk]); 
 						
-						newWalk = Constants.deepCopyArray(curWalk);
-						newWalk.push([curSpace[0] + 1, curSpace[1]]);
-						dfsStack.push([curSpace[0] + 1, curSpace[1], newWalk]); 
+						newPos = new BoardPosition(curSpace.row + 1, curSpace.col);
+						newWalk = Constants.deepCopyBoardPositionVector(curWalk);
+						newWalk.push(newPos);
+						dfsStack.push([newPos, newWalk]); 
 						
-						newWalk = Constants.deepCopyArray(curWalk);
-						newWalk.push([curSpace[0], curSpace[1] - 1]);
-						dfsStack.push([curSpace[0], curSpace[1] - 1, newWalk]); 
+						newPos = new BoardPosition(curSpace.row, curSpace.col - 1);
+						newWalk = Constants.deepCopyBoardPositionVector(curWalk);
+						newWalk.push(newPos);
+						dfsStack.push([newPos, newWalk]); 
 						
-						newWalk = Constants.deepCopyArray(curWalk);
-						newWalk.push([curSpace[0], curSpace[1] + 1]);
-						dfsStack.push([curSpace[0], curSpace[1] + 1, newWalk]); 
+						newPos = new BoardPosition(curSpace.row, curSpace.col + 1);
+						newWalk = Constants.deepCopyBoardPositionVector(curWalk);
+						newWalk.push(newPos);
+						dfsStack.push([newPos, newWalk]); 
 					}
 				}
 			}
 			
-			playerPossibleMoves = [];
+			playerPossibleMoves = new Vector.<BoardPosition>();
 			// TODO: save path so you don't have to walk path manually
 			for (i = 0; i < board.length; i++) 
 			{
 				for (j = 0; j < board[0].length; j++)
 				{
 					if (markedSpaces[i][j] >= 0) {
-						playerPossibleMoves.push([i, j]);
+						playerPossibleMoves.push(new BoardPosition(i, j));
 					}
 				}
 			}
@@ -749,7 +759,7 @@ package
 				for (j = 0; j < playerPossibleWalks[0].length; j++)
 				{
 					if (playerPossibleWalks[i][j] != null && playerPossibleWalks[i][j].length > 0) {
-						var allWalks:Array = Constants.deepCopyArray(playerPossibleWalks[i][j]);
+						var allWalks:Vector.<Vector.<BoardPosition>> = playerPossibleWalks[i][j];
 						var minWalk:int = 999999;
 						for (var k:int = 0; k < allWalks.length; k++) {
 							if (allWalks[k].length < minWalk) {
@@ -757,7 +767,7 @@ package
 							}
 						}
 						
-						playerPossibleWalks[i][j] = [];
+						playerPossibleWalks[i][j] = new Vector.<Vector.<BoardPosition>>();
 						for (k = 0; k < allWalks.length; k++) {
 							if (allWalks[k].length == minWalk) {
 								playerPossibleWalks[i][j].push(allWalks[k]);

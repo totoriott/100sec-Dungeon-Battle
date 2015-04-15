@@ -8,11 +8,9 @@ package
 		public var row:int;
 		public var col:int;
 		
-		public function BoardSpace(t:int, v:int, r:int, c:int) {
+		public function BoardSpace(t:int, v:int) {
 			type = t;
 			value = v;
-			row = r; // TODO: should these be final lol. are these even needed
-			col = c;
 		}
 		
 		// here in case you ever need to have logic for it
@@ -22,7 +20,7 @@ package
 		}
 		
 		public function deepCopy():BoardSpace {
-			return new BoardSpace(type, value, row, col);
+			return new BoardSpace(type, value);
 		}	
 	}
 

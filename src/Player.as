@@ -17,7 +17,7 @@ package
 		
 		internal var hand:Array = [];
 		internal var items:Array = [];
-		internal var position:Array = [];
+		internal var position:BoardPosition;
 		internal var points:int = 0;
 		
 		internal var lastMovementRoll:Array = [];
@@ -28,10 +28,10 @@ package
 		internal var statStr:Text;
 		internal var pointsStr:Text;
 		
-		public function Player(mName:String, mPosition:Array) 
+		public function Player(mName:String, mPosition:BoardPosition) 
 		{
 			name = mName;
-			position = Constants.deepCopyArray(mPosition);
+			position = mPosition.deepCopy();
 			
 			initUX();
 		}		
@@ -75,9 +75,9 @@ package
 			return maxHp;
 		}
 		
-		public function getPosition():Array
+		public function getPosition():BoardPosition
 		{
-			return Constants.deepCopyArray(position);
+			return position.deepCopy();
 		}
 		
 		public function getCards():Array
@@ -107,7 +107,7 @@ package
 			return getMovementRollValue();
 		}
 
-		public function moveToSpace(newSpace:Array):void
+		public function moveToSpace(newSpace:BoardPosition):void
 		{
 			position = newSpace;
 		}

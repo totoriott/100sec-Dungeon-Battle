@@ -197,6 +197,19 @@ package
 			
 			return outArray;
 		}
+		
+		public static function deepCopyBoardPositionVector(inVector:Vector.<BoardPosition>):Vector.<BoardPosition> {
+			if (inVector == null) 
+				return null; 
+				
+			var outVector:Vector.<BoardPosition> = new Vector.<BoardPosition>(inVector.length);
+			for (var i:int = 0; i < inVector.length; i++)
+			{
+				outVector[i] = inVector[i].deepCopy();
+			}
+			
+			return outVector;
+		}
 	}
 
 }
