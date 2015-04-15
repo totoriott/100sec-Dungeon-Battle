@@ -13,6 +13,7 @@ package
 		public static var GSTATE_SELECTMOVE:int = 2;
 		public static var GSTATE_MOVING:int = 3;
 		public static var GSTATE_ACTIVATESPACE:int = 4;
+		public static var GSTATE_ENDTURN:int = 5;
 		
 		// Graphics things
 		public static var FRAMES_BETWEEN_SQUARES_MOVED:int = 5;

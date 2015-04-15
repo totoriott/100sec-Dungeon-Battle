@@ -241,6 +241,9 @@ package
 					
 				case Constants.GSTATE_ACTIVATESPACE:
 					break;
+					
+				case Constants.GSTATE_ENDTURN:
+					break;
 			}
 
 			gameState = newState;
@@ -269,6 +272,10 @@ package
 					
 				case Constants.GSTATE_ACTIVATESPACE: // the player actually lands on the space and does whatever
 					update_activateSpace(inputArray);
+					break;
+					
+				case Constants.GSTATE_ENDTURN: // end turn cleanup
+					update_endTurn(inputArray);
 					break;
 			}
 		}
@@ -431,7 +438,7 @@ package
 		{
 			var curPlayer:Player = players[playerTurn];
 			
-			if (inputArray[Constants.KEY_DEBUG] == Constants.INPUT_DOWN) // debug button
+			if (inputArray[Constants.KEY_DEBUG] == Constants.INPUT_PRESSED) // debug button
 			{
 				initNewGame();
 				return;
@@ -453,6 +460,9 @@ package
 			{
 				cardIndex = -1;
 				changeState(Constants.GSTATE_DOROLL);
+			}
+			else if (inputArray[Constants.KEY_FIRE2] == Constants.INPUT_PRESSED || curPlayer.isStunned()) { // TODO: figure out what key to use for resting
+				// TODO: do resting
 			}
 			else if (cards.length > 0) // otherwise if they are still selecting their card
 			{
@@ -680,6 +690,15 @@ package
 					players[playerTurn].moveToSpace(getEmptySpaceOnBoard()); 
 					break;
 			}
+			
+			changeState(Constants.GSTATE_ENDTURN);
+		}
+		
+		private function update_endTurn(inputArray:Array):void
+		{
+			// do end of turn cleanup
+			var curPlayer:Player = players[playerTurn];
+			curPlayer.finishTurn();
 			
 			changeState(Constants.GSTATE_SELECTCARD);
 		}

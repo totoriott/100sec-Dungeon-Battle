@@ -9,7 +9,7 @@ package
 	public class Player 
 	{
 		internal var level:int = 1;
-		internal var skillPoints:Array = [1, 1, 6, 1];
+		internal var skillPoints:Array = [1, 1, 1, 1];
 		
 		internal var name:String = "Nameless"; // TODO - funny default name
 		internal var hp:int = 10;
@@ -20,6 +20,7 @@ package
 		internal var position:BoardPosition;
 		
 		internal var legDamage:Boolean = false;
+		internal var stunTurnCounter:int = 0;
 		internal var flagPoints:int = 0;
 		
 		internal var card_boardActivated:BoardCard;
@@ -126,7 +127,18 @@ package
 		
 		public function awardFlagPoints(pts:int):void {
 			flagPoints += pts;
-			initUX();
+		}
+		
+		public function changeHp(delta:int):void {
+			hp += delta;
+			
+			if (hp < 0) {
+				hp = 0;
+				// TODO: oh no! you died
+			}
+			if (hp > getMaxHp()) {
+				hp = getMaxHp();
+			}
 		}
 		
 		// TODO - you could sort the hands even though you hella don't in battle hunter
@@ -145,7 +157,7 @@ package
 		public function sufferFromTrap(value:int):void {
 			switch (value) {
 				case Constants.TRAP_DAMAGE:
-					// TODO: oh no!
+					changeHp(-1 * Math.ceil(hp / 2)); // lose half your HP
 					break;
 					
 				case Constants.TRAP_EMPTY:
@@ -153,12 +165,11 @@ package
 					break;
 					
 				case Constants.TRAP_LEG:
-					legDamage = true;
-					initUX();
+					legDamage = true; // prevents your move bonus
 					break;
 					
 				case Constants.TRAP_STUN:
-					// TODO: oh no!
+					stunTurnCounter = 2; // this turn and next
 					break;
 			}
 		}
@@ -166,6 +177,20 @@ package
 		public function prepareForTurn():void {
 			card_boardActivated = null;
 			cardBonus_movement = 0;
+			
+			initUX();
+		}
+		
+		public function finishTurn():void {
+			if (stunTurnCounter > 0) {
+				stunTurnCounter--;
+			}
+			
+			initUX();
+		}
+		
+		public function isStunned():Boolean {
+			return stunTurnCounter > 0;
 		}
 		
 		// use a card when moving about the board
@@ -204,7 +229,12 @@ package
 		{
 			// TODO: UX for trap damage?
 			
-			headerStr = new Text(name + " - Lv. " + level.toString());
+			var nameAndStatusString:String = name;
+			if (isStunned()) {
+				name = "[STUN] " + name;
+			}
+			
+			headerStr = new Text(name + " Lv." + level.toString());
 			headerStr.font = "Segoe";
 			headerStr.color = 0x000000;
 			
