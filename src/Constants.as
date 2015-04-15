@@ -20,6 +20,10 @@ package
 		// Graphics things
 		public static var FRAMES_BETWEEN_SQUARES_MOVED:int = 5;
 		
+		public static var PLAYERHUD_TYPE_CARDS:int = 0;
+		public static var PLAYERHUD_TYPE_ITEMS:int = 0;
+		public static var PLAYERHUD_TYPES:Array = [PLAYERHUD_TYPE_CARDS, PLAYERHUD_TYPE_ITEMS];
+		
 		// Key mappings
 		public static var KEYMAP_LEFT:int = Key.LEFT;
 		public static var KEYMAP_RIGHT:int = Key.RIGHT;

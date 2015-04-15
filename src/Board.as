@@ -20,6 +20,8 @@ package
 		private var viewCols:int = 14;
 		
 		private var gameState:int = Constants.GSTATE_GAMEOVER;
+		private var playerHudType:int = Constants.PLAYERHUD_TYPE_CARDS;
+		
 		private var playerTurn:int = 0; // which player's turn it is
 		private var exitSpace:BoardPosition; // where is the exit
 	
@@ -44,6 +46,8 @@ package
 			
 			playerTurn = players.length - 1;
 			changeState(Constants.GSTATE_STARTTURN);
+			
+			playerHudType = Constants.PLAYERHUD_TYPE_CARDS;
 			
 			// TODO - decide first player
 		}
@@ -267,7 +271,14 @@ package
 				return;
 			}
 			
-			if (inputArray[Constants.KEY_FIRE3] == Constants.INPUT_DOWN) // if we're holding down the camera button
+			if (inputArray[Constants.KEY_FIRE5] == Constants.INPUT_PRESSED) { // toggle player HUD display
+				playerHudType += 1;
+				if (playerHudType >= Constants.PLAYERHUD_TYPES.length) {
+					playerHudType = 0;
+				}
+			}
+			
+			if (inputArray[Constants.KEY_FIRE6] == Constants.INPUT_DOWN) // if we're holding down the camera button
 			{
 				update_moveCamera(inputArray);
 				return;
@@ -425,18 +436,26 @@ package
 				Draw.graphic(player.getStatStr(), hudX, playerY + 16);
 				Draw.graphic(player.getPointsStr(), hudX + 208, playerY + 16);
 				
-				// draw their hand
-				for (j = 0; j < cards.length; j++)
-				{
-					var cardImage:Image = cards[j].image;
-					cardImage.scale = 0.75; // TODO - hack while i figure card size out
-					
-					var cardY:int = playerY + 40;
-					if (gameState == Constants.GSTATE_SELECTCARD && i == playerTurn
-						&& j == cardIndex) // if it's the card selected
-							cardY = playerY + 40 + 20;
-					Draw.graphic(cardImage, hudX + 36 * j, cardY);
+				switch (playerHudType) {
+					case Constants.PLAYERHUD_TYPE_CARDS:
+						// draw their hand
+						for (j = 0; j < cards.length; j++)
+						{
+							var cardImage:Image = cards[j].image;
+							cardImage.scale = 0.75; // TODO - hack while i figure card size out
+							
+							var cardY:int = playerY + 40;
+							if (gameState == Constants.GSTATE_SELECTCARD && i == playerTurn
+								&& j == cardIndex) // if it's the card selected
+									cardY = playerY + 40 + 20;
+							Draw.graphic(cardImage, hudX + 36 * j, cardY);
+						}
+						break;
+						
+					case Constants.PLAYERHUD_TYPE_ITEMS:
+						break;
 				}
+				
 			}
 			
 			// DEBUG TODO - output the framerate
