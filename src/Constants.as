@@ -93,6 +93,7 @@ package
 		[Embed(source = 'assets/font/segoeui.ttf', embedAsCFF = "false", fontFamily = 'Segoe')] private static const FONT_SEGOE:Class;
 		
 		[Embed(source = 'assets/img/tile/blank.png')] private static const SRC_TILE_BLANK:Class;
+		[Embed(source = 'assets/img/tile/null.png')] private static const SRC_TILE_NULL:Class;
 		[Embed(source = 'assets/img/tile/enemy.png')] private static const SRC_TILE_ENEMY:Class;
 		[Embed(source = 'assets/img/tile/exit.png')] private static const SRC_TILE_EXIT:Class;
 		[Embed(source = 'assets/img/tile/flag_0.png')] private static const SRC_TILE_FLAG1:Class;
@@ -112,7 +113,7 @@ package
 		public static function initGraphics():void
 		{
 			BOARD_SPRITES = [
-				[new Image(SRC_TILE_ENEMY)], // TODO - null graphic (or lack thereof)
+				[new Image(SRC_TILE_NULL)], 
 				[new Image(SRC_TILE_BLANK)],
 				[new Image(SRC_TILE_PLAYER1), new Image(SRC_TILE_PLAYER2), new Image(SRC_TILE_PLAYER3), new Image(SRC_TILE_PLAYER4)], //DEPRECATED
 				[new Image(SRC_TILE_EXIT)],	

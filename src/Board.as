@@ -107,14 +107,78 @@ package
 			// TODO - make the board more interesting than this
 			var boardRows:int = 14;
 			var boardCols:int = 14;
-			board = new Vector.<Vector.<BoardSpace>>(boardRows, true);
-			for (var i:int = 0; i < boardRows; i++)
-			{
-				board[i] = new Vector.<BoardSpace>(boardCols, true);
-				for (var j:int = 0; j < boardCols; j++)
-				{
-					board[i][j] = new BoardSpace(Constants.BOARD_EMPTY, 0);
-				}
+			var boardInitStyle:int = 1;
+			switch (boardInitStyle) {
+				case 0: // all spaces exist and are empty
+					board = new Vector.<Vector.<BoardSpace>>(boardRows, true);
+					for (var i:int = 0; i < boardRows; i++)
+					{
+						board[i] = new Vector.<BoardSpace>(boardCols, true);
+						for (var j:int = 0; j < boardCols; j++)
+						{
+							board[i][j] = new BoardSpace(Constants.BOARD_EMPTY, 0);
+						}
+					}
+					break;
+					
+				case 1: // remove random 'lakes' as if you're playing minesweeper				
+					var boardValid:Boolean = false;
+					while (!boardValid) {
+						// fill in the board entirely
+						board = new Vector.<Vector.<BoardSpace>>(boardRows, true);
+						for (i = 0; i < boardRows; i++)
+						{
+							board[i] = new Vector.<BoardSpace>(boardCols, true);
+							for (j = 0; j < boardCols; j++)
+							{
+								board[i][j] = new BoardSpace(Constants.BOARD_EMPTY, 0);
+							}
+						}
+						
+						var lakesCreated:int = 0;
+						while (FP.rand(2 * (Math.max(board.length, board[0].length) - lakesCreated)) > 1) { // TODO: tweak this BS formula
+							var holeX:int = FP.rand(board.length);
+							var holeY:int = FP.rand(board[0].length);
+							var spacesInLake:int = 0;
+							
+							if (getSpace(holeX, holeY).type == Constants.BOARD_EMPTY) {
+								var holePos:BoardPosition = new BoardPosition(holeX, holeY);
+								var holeStack:Vector.<BoardPosition> = new Vector.<BoardPosition>();
+								holeStack.push(holePos);
+								
+								while (holeStack.length > 0) {
+									FP.shuffle(holeStack);
+									holePos = holeStack.pop();
+									spacesInLake += 1;
+									
+									if (isValidSpace(holePos) &&
+										board[holePos.row][holePos.col].type == Constants.BOARD_EMPTY) {
+										board[holePos.row][holePos.col].changeTo(Constants.BOARD_NULL, 0);
+										
+										if (FP.random / spacesInLake > 0.15) { // TODO: more bs numbers
+											var nextDirection:Vector.<BoardPosition> = new Vector.<BoardPosition>();
+											nextDirection.push(new BoardPosition(holePos.row - 1, holePos.col));
+											nextDirection.push(new BoardPosition(holePos.row + 1, holePos.col));
+											nextDirection.push(new BoardPosition(holePos.row, holePos.col - 1));
+											nextDirection.push(new BoardPosition(holePos.row - 1, holePos.col + 1));
+											FP.shuffle(nextDirection);
+											
+											for (var kk:int = 0; kk < nextDirection.length; kk++) {
+												if (FP.random > 0.5) {
+													holeStack.push(nextDirection[kk]);
+												}
+											}
+										}
+									}
+								}
+
+								lakesCreated++;
+							}
+						}
+						
+						boardValid = isBoardValid(board);
+					}
+					break;
 			}
 			
 			// Place the exit
@@ -200,6 +264,15 @@ package
 			}
 			
 			return false;
+		}
+		
+		public function isValidSpace(space:BoardPosition):Boolean {
+			if (space.row < 0 || space.row >= board.length)
+				return false;
+			if (space.col < 0 || space.col >= board[0].length)
+				return false;
+				
+			return true;
 		}
 		
 		// returns true if you can move to that space
@@ -989,6 +1062,10 @@ package
 			}
 			
 			return false;
+		}
+		
+		private function isBoardValid(board:Vector.<Vector.<BoardSpace>>) {
+			// TODO: this			
 		}
 	}
 }
