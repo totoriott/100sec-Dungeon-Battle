@@ -324,6 +324,10 @@ package
 					{
 						players[playerTurn].giveCard(dealCardFromDeck());
 					}
+					
+					playerPossibleWalks = new Vector.<Vector.<Vector.<Vector.<BoardPosition>>>>(board.length, true);
+					playerPossibleMoves = new Vector.<BoardPosition>();
+					playerWalk = new Vector.<BoardPosition>();
 					break;
 					
 				case Constants.GSTATE_SELECTACTION:
@@ -777,11 +781,9 @@ package
 					playerWalk = playerWalk.slice(0, 0); // clear the walk
 			}
 				
-			if (newSquareSelected && isMoveableSpace(newSquare)) {
-				if (playerPossibleWalks[newSquare.row][newSquare.col].length > 0) { 
-					playerWalk = playerPossibleWalks[newSquare.row][newSquare.col][0];
-					//playerWalk = playerPossibleWalks[newSquare.row][newSquare.col][Math.floor(FP.rand(playerPossibleWalks[newSquare.row][newSquare.col].length))];
-				}
+			if (newSquareSelected && isValidSpace(newSquare) && playerPossibleWalks[newSquare.row][newSquare.col].length > 0) {
+				playerWalk = playerPossibleWalks[newSquare.row][newSquare.col][0];
+				//playerWalk = playerPossibleWalks[newSquare.row][newSquare.col][Math.floor(FP.rand(playerPossibleWalks[newSquare.row][newSquare.col].length))];
 			}
 		}
 		
@@ -805,15 +807,20 @@ package
 					var newSquare:BoardPosition = playerWalk[0];
 					playerWalk = playerWalk.slice(1, playerWalk.length);
 					
-					curPlayer.incrementStepsWalked(1);
-					curPlayer.moveToSpace(newSquare);
-					
-					if (getSpaceForPos(newSquare).type == Constants.BOARD_TRAP) {
-						// TODO: chance of evade
+					if (isPlayerSpace(newSquare)) { // you're moving onto someone 
+						playerWalk = playerWalk.slice(0, 0); // stop moving
+						// TODO: fight?????
+					} else {
+						curPlayer.incrementStepsWalked(1);
+						curPlayer.moveToSpace(newSquare);
 						
-						playerWalk = playerWalk.slice(0, 0); // whoops it seems your journey has ended here
+						if (getSpaceForPos(newSquare).type == Constants.BOARD_TRAP) {
+							// TODO: chance of evade
+							
+							playerWalk = playerWalk.slice(0, 0); // whoops it seems your journey has ended here
+						}
 					}
-					
+
 					moveTimer = Constants.FRAMES_BETWEEN_SQUARES_MOVED;
 				}
 			}
@@ -971,9 +978,9 @@ package
 			while (dfsStack.length > 0) {
 				var curNode:Array = dfsStack.pop();
 				var curWalk:Vector.<BoardPosition> = curNode[1];
-
+				var curSpace:BoardPosition = curNode[0];
+				
 				if (curWalk.length <= playerRoll) { // spaces left to move (yes this is off by one because of bad loop logic)
-					var curSpace:BoardPosition = curNode[0];
 					if (isMoveableSpace(curSpace)) {
 						playerPossibleWalks[curSpace.row][curSpace.col].push(curWalk);
 
@@ -1000,7 +1007,13 @@ package
 							newWalk.push(newPos);
 							dfsStack.push([newPos, newWalk]); 
 						}
-					}
+					} 
+				}
+				
+				// you're allowed to 'move' to another player to attack them, one space beyond what you can usually walk
+				if (isPlayerSpace(curSpace) && (curSpace.row != curPosition.row || curSpace.col != curPosition.col)) { 
+					markedSpaces[curSpace.row][curSpace.col] = curWalk.length;
+					playerPossibleWalks[curSpace.row][curSpace.col].push(curWalk);
 				}
 			}
 			
