@@ -27,8 +27,12 @@ package
 		private var playerTurn:int = 0; // which player's turn it is
 		private var exitSpace:BoardPosition; // where is the exit
 		private var keyItemId:int = 0; // which boarditem ID is the key item to win
+		
 		private var attackPlayer:Player; // if these are populated, combat will happen
 		private var defensePlayer:Player;
+		private var selectedDefenseOption:int = 0;
+		private var selectedDefenseCard:int = 0;
+		private var selectedAttackCard:int = 0;
 	
 		private var cardIndex:int = 0; // index of the card the player is selecting
 		private var playerWalk:Vector.<BoardPosition>; // the squares that the player is walking this turn
@@ -82,7 +86,7 @@ package
 			
 			for (var i:int = 0; i < Constants.PLAYER_COUNT; i++)
 			{
-				var newPlayer:Player = new Player("Player " + (i+1), getEmptySpaceOnBoard());
+				var newPlayer:Player = new Player(i, "Player " + (i+1), getEmptySpaceOnBoard());
 				
 				for (var j:int = 0; j < Constants.HAND_CARD_LIMIT; j++)
 					newPlayer.giveCard(dealCardFromDeck());
@@ -384,12 +388,18 @@ package
 					break;
 					
 				case Constants.GSTATE_COMBAT_DEFENSE_SELECT:
+					selectedDefenseOption = 0;
+					selectedDefenseCard = -1;
+					selectedAttackCard = -1;
 					break;
 					
 				case Constants.GSTATE_COMBAT_DEFENSE_SELECTCARD:
 					break;
 					
 				case Constants.GSTATE_COMBAT_OFFENSE_SELECTCARD:
+					break;
+					
+				case Constants.GSTATE_COMBAT_RESOLVE:
 					break;
 					
 				case Constants.GSTATE_ENDTURN:
@@ -460,8 +470,12 @@ package
 					update_combatDefenseSelectCard(inputArray);
 					break;
 					
-				case Constants.GSTATE_COMBAT_OFFENSE_SELECTCARD: // offense is selecting card for combat
+				case Constants.GSTATE_COMBAT_OFFENSE_SELECTCARD: // attack is selecting card for combat
 					update_combatOffenseSelectCard(inputArray);
+					break;
+					
+				case Constants.GSTATE_COMBAT_RESOLVE:
+					update_combatResolve(inputArray);
 					break;
 					
 				case Constants.GSTATE_ENDTURN: // end turn cleanup
@@ -571,9 +585,75 @@ package
 						Draw.rect(boardX + spaceCopy.col * tileSize, boardY + spaceCopy.row * tileSize, tileSize, tileSize, color, 0.5 * boardAlpha);
 			}
 			
-			// draw battle overlay if battle is happening
+			// draw combat overlay if battle is happening
 			if (gameStateIsCombat()) {
+				var combatX:int = 24;
+				var combatY:int = 24;
 				
+				// draw defender
+				playerSprite = Constants.PLAYER_SPRITES[defensePlayer.getPlayerNumber()];
+				playerSprite.alpha = 1;
+				Draw.graphic(playerSprite, combatX, combatY);
+				combatY += 40;
+				
+				// draw defense options
+				var defenseOptionAlpha:Number = gameState == (Constants.GSTATE_COMBAT_DEFENSE_SELECT) ? 1 : 0.5;
+				for (i = 0; i < Constants.COMBAT_DEFENSE_OPTIONIMAGES.length; i++) {
+					var optionSprite:Image = Constants.COMBAT_DEFENSE_OPTIONIMAGES[i];
+					optionSprite.scale = 0.5;
+					optionSprite.alpha = defenseOptionAlpha;
+					
+					if (i == selectedDefenseOption) {
+						Draw.rect(combatX + 68 * i, combatY, 72, 72, 0xFFFF00, defenseOptionAlpha);
+					}
+					
+					Draw.graphic(optionSprite, combatX + 68 * i, combatY);
+				}
+				combatY += 80;
+				
+				// draw defender hand
+				var defenseCardAlpha:Number = gameState == (Constants.GSTATE_COMBAT_DEFENSE_SELECTCARD) ? 1 : 0.5; 
+				var dCards:Vector.<BoardCard> = defensePlayer.getCards();
+				for (j = -1; j < dCards.length; j++)
+				{
+					var dCardImage:Image = Constants.IMG_NO_CARD;
+					if (j >= 0) {
+						dCardImage = dCards[j].image;
+					}
+					dCardImage.scale = 0.75; // TODO - hack while i figure card size out
+					dCardImage.alpha = defenseCardAlpha;
+					
+					var dCardY:int = combatY + 20;
+					if (selectedDefenseCard == j) // if it's the card selected
+						dCardY = combatY;
+					Draw.graphic(dCardImage, combatX + 68 * (j + 1), dCardY);
+				}
+				combatY += 84;
+				
+				// draw attacker
+				playerSprite = Constants.PLAYER_SPRITES[attackPlayer.getPlayerNumber()];
+				playerSprite.alpha = 1;
+				Draw.graphic(playerSprite, combatX, combatY);
+				combatY += 40;
+				
+				// draw attacker hand
+				var attackCardAlpha:Number = gameState == (Constants.GSTATE_COMBAT_OFFENSE_SELECTCARD) ? 1 : 0.5; 
+				var aCards:Vector.<BoardCard> = attackPlayer.getCards();
+				for (j = -1; j < aCards.length; j++)
+				{
+					var aCardImage:Image = Constants.IMG_NO_CARD;
+					if (j >= 0) {
+						aCardImage = aCards[j].image;
+					}
+					aCardImage.scale = 0.75; // TODO - hack while i figure card size out
+					aCardImage.alpha = attackCardAlpha;
+					
+					var aCardY:int = combatY + 20;
+					if (selectedAttackCard == j) // if it's the card selected
+						aCardY = combatY;
+					Draw.graphic(aCardImage, combatX + 68 * (j + 1), aCardY);
+				}
+				combatY += 84;
 			}
 			
 			// draw the HUD
@@ -614,11 +694,12 @@ package
 						{
 							var cardImage:Image = cards[j].image;
 							cardImage.scale = 0.75; // TODO - hack while i figure card size out
+							cardImage.alpha = 1;
 							
-							var cardY:int = playerY + 40;
+							var cardY:int = playerY + 40 + 20;
 							if (gameState == Constants.GSTATE_SELECTCARD && i == playerTurn
 								&& j == cardIndex) // if it's the card selected
-									cardY = playerY + 40 + 20;
+									cardY = playerY + 40;
 							Draw.graphic(cardImage, hudX + 36 * j, cardY);
 						}
 						break;
@@ -955,15 +1036,73 @@ package
 		}
 		
 		private function update_combatDefenseSelect(inputArray:Array):void {
-			
+			// select which defense option will be used
+			if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED)
+			{
+				changeState(Constants.GSTATE_COMBAT_DEFENSE_SELECTCARD);
+			}
+			else if (inputArray[Constants.KEY_LEFT] == Constants.INPUT_PRESSED) {
+				selectedDefenseOption--;
+				if (selectedDefenseOption < 0) {
+					selectedDefenseOption = Constants.COMBAT_DEFENSE_OPTIONIMAGES.length - 1;
+				}
+			}
+			else if (inputArray[Constants.KEY_RIGHT] == Constants.INPUT_PRESSED) {
+				selectedDefenseOption++;
+				if (selectedDefenseOption >= Constants.COMBAT_DEFENSE_OPTIONIMAGES.length) {
+					selectedDefenseOption = 0;
+				}
+			}
 		}
 		
 		private function update_combatDefenseSelectCard(inputArray:Array):void {
-			
+			// select what defense card will be used
+			// TODO: change this if you're picking surrender. surrender is dumb
+			if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED)
+			{
+				changeState(Constants.GSTATE_COMBAT_OFFENSE_SELECTCARD);
+			}
+			else if (inputArray[Constants.KEY_FIRE2] == Constants.INPUT_PRESSED) { // press back to go back one square
+				changeState(Constants.GSTATE_COMBAT_DEFENSE_SELECT);
+				return;
+			}
+			else if (inputArray[Constants.KEY_LEFT] == Constants.INPUT_PRESSED) {
+				selectedDefenseCard--;
+				if (selectedDefenseCard < -1) {
+					selectedDefenseCard = defensePlayer.getCards().length - 1;
+				}
+			}
+			else if (inputArray[Constants.KEY_RIGHT] == Constants.INPUT_PRESSED) {
+				selectedDefenseCard++;
+				if (selectedDefenseCard >= defensePlayer.getCards().length) {
+					selectedDefenseCard = -1;
+				}
+			}
 		}
 		
 		private function update_combatOffenseSelectCard(inputArray:Array):void {
-			
+			// select what offense card will be used
+			if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED)
+			{
+				changeState(Constants.GSTATE_COMBAT_RESOLVE);
+			}
+			// can't go back because defense has locked in
+			else if (inputArray[Constants.KEY_LEFT] == Constants.INPUT_PRESSED) {
+				selectedAttackCard--;
+				if (selectedAttackCard < -1) {
+					selectedAttackCard = attackPlayer.getCards().length - 1;
+				}
+			}
+			else if (inputArray[Constants.KEY_RIGHT] == Constants.INPUT_PRESSED) {
+				selectedAttackCard++;
+				if (selectedAttackCard >= attackPlayer.getCards().length) {
+					selectedAttackCard = -1;
+				}
+			}
+		}
+		
+		private function update_combatResolve(inputArray:Array):void {
+			changeState(Constants.GSTATE_ENDTURN); // TODO: everything
 		}
 
 		private function update_endTurn(inputArray:Array):void

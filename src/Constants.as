@@ -18,7 +18,8 @@ package
 		public static var GSTATE_COMBAT_DEFENSE_SELECT:int = 7;
 		public static var GSTATE_COMBAT_DEFENSE_SELECTCARD:int = 8;
 		public static var GSTATE_COMBAT_OFFENSE_SELECTCARD:int = 9;
-		public static var GSTATE_ENDTURN:int = 7;
+		public static var GSTATE_COMBAT_RESOLVE:int = 10;
+		public static var GSTATE_ENDTURN:int = 11;
 		
 		// Graphics things
 		public static var FRAMES_BETWEEN_SQUARES_MOVED:int = 5;
@@ -155,6 +156,8 @@ package
 			[[new Image(SRC_CARD_TRAP_L), CARD_TRAP, TRAP_LEG], 5],
 			[[new Image(SRC_CARD_TRAP_S), CARD_TRAP, TRAP_STUN], 5]
 			];
+			
+			IMG_NO_CARD = new Image(SRC_CARD_NOCARD);
 		}
 		
 		// Game constants
@@ -209,6 +212,8 @@ package
 		[Embed(source = 'assets/img/card/trap_E.png')] private static const SRC_CARD_TRAP_E:Class;
 		[Embed(source = 'assets/img/card/trap_L.png')] private static const SRC_CARD_TRAP_L:Class;
 		[Embed(source = 'assets/img/card/trap_S.png')] private static const SRC_CARD_TRAP_S:Class;
+		[Embed(source = 'assets/img/card/nocard.png')] private static const SRC_CARD_NOCARD:Class;
+		public static var IMG_NO_CARD:Image;
 		
 		// Item/treasure constants
 		[Embed(source = 'assets/img/item/0.png')] private static const SRC_ITEM_0:Class;
@@ -238,6 +243,21 @@ package
 				[8, new Image(SRC_ITEM_8), ITEM_NOEFFECT, 0, 1000, 100],
 				[9, new Image(SRC_ITEM_9), ITEM_NOEFFECT, 0, 1000, 100],
 			];
+		}
+		
+		// Combat constants
+		[Embed(source = 'assets/img/combat/counter.png')] private static const SRC_COMBAT_COUNTER:Class;
+		[Embed(source = 'assets/img/combat/guard.png')] private static const SRC_COMBAT_GUARD:Class;
+		[Embed(source = 'assets/img/combat/run.png')] private static const SRC_COMBAT_RUN:Class;
+		[Embed(source = 'assets/img/combat/surrender.png')] private static const SRC_COMBAT_SURRENDER:Class;
+		public static var COMBAT_DEFENSE_COUNTER:int = 0;
+		public static var COMBAT_DEFENSE_GUARD:int = 1;
+		public static var COMBAT_DEFENSE_RUN:int = 2;
+		public static var COMBAT_DEFENSE_SURRENDER:int = 3;
+		public static var COMBAT_DEFENSE_OPTIONIMAGES:Array;
+		public static function initCombatGraphics():void
+		{
+			COMBAT_DEFENSE_OPTIONIMAGES = [new Image(SRC_COMBAT_COUNTER), new Image(SRC_COMBAT_GUARD), new Image(SRC_COMBAT_RUN), new Image(SRC_COMBAT_SURRENDER)];
 		}
 		
 		// TODO - doesn't deep copy object inside array but yolo

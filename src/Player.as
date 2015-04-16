@@ -8,6 +8,8 @@ package
 	
 	public class Player 
 	{
+		internal var playerNumber:int = -1;
+		
 		internal var level:int = 1;
 		internal var skillPoints:Array = [1, 1, 1, 1];
 		
@@ -40,8 +42,9 @@ package
 		internal var statStr:Text;
 		internal var pointsStr:Text;
 		
-		public function Player(mName:String, mPosition:BoardPosition) 
+		public function Player(number:int, mName:String, mPosition:BoardPosition) 
 		{
+			playerNumber = number;
 			name = mName;
 			position = mPosition.deepCopy();
 			hand = new Vector.<BoardCard>();
@@ -49,6 +52,10 @@ package
 			
 			initUX();
 		}		
+		
+		public function getPlayerNumber():int {
+			return playerNumber;
+		}
 		
 		public function getName():String
 		{

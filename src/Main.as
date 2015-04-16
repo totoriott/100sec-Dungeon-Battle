@@ -10,6 +10,7 @@ package
 			super(1024, 768, 60, false);
 			
 			Constants.initGraphics();
+			Constants.initCombatGraphics();
 			Constants.initTreasureDb();
 			
 			FP.world = new WorldGameplay;
