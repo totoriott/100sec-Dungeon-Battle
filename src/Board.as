@@ -1,7 +1,9 @@
 package  
 {
+	import flash.display.Graphics;
 	import net.flashpunk.FP;
 	import net.flashpunk.Entity;
+	import net.flashpunk.Graphic;
 	import net.flashpunk.graphics.Image;
 	import net.flashpunk.graphics.Text;
 	import net.flashpunk.utils.*;
@@ -25,6 +27,8 @@ package
 		private var playerTurn:int = 0; // which player's turn it is
 		private var exitSpace:BoardPosition; // where is the exit
 		private var keyItemId:int = 0; // which boarditem ID is the key item to win
+		private var attackPlayer:Player; // if these are populated, combat will happen
+		private var defensePlayer:Player;
 	
 		private var cardIndex:int = 0; // index of the card the player is selecting
 		private var playerWalk:Vector.<BoardPosition>; // the squares that the player is walking this turn
@@ -274,6 +278,19 @@ package
 			return false;
 		}
 		
+		public function playerAtSpace(space:BoardPosition):Player
+		{
+			for (var i:int = 0; i < players.length; i++)
+			{
+				var player:Player = players[i];
+				var playerPos:BoardPosition = player.getPosition();
+				if (space.row == playerPos.row && space.col == playerPos.col)
+					return player;
+			}
+			
+			return null;
+		}
+		
 		public function isValidSpace(space:BoardPosition):Boolean {
 			if (space.row < 0 || space.row >= board.length)
 				return false;
@@ -328,6 +345,8 @@ package
 					playerPossibleWalks = new Vector.<Vector.<Vector.<Vector.<BoardPosition>>>>(board.length, true);
 					playerPossibleMoves = new Vector.<BoardPosition>();
 					playerWalk = new Vector.<BoardPosition>();
+					attackPlayer = null;
+					defensePlayer = null;
 					break;
 					
 				case Constants.GSTATE_SELECTACTION:
@@ -362,6 +381,15 @@ package
 					break;
 					
 				case Constants.GSTATE_ACTIVATESPACE:
+					break;
+					
+				case Constants.GSTATE_COMBAT_DEFENSE_SELECT:
+					break;
+					
+				case Constants.GSTATE_COMBAT_DEFENSE_SELECTCARD:
+					break;
+					
+				case Constants.GSTATE_COMBAT_OFFENSE_SELECTCARD:
 					break;
 					
 				case Constants.GSTATE_ENDTURN:
@@ -424,6 +452,18 @@ package
 					update_activateSpace(inputArray);
 					break;
 					
+				case Constants.GSTATE_COMBAT_DEFENSE_SELECT: // defense is selecting action for combat
+					update_combatDefenseSelect(inputArray);
+					break;
+					
+				case Constants.GSTATE_COMBAT_DEFENSE_SELECTCARD: // defense is selecting card for combat
+					update_combatDefenseSelectCard(inputArray);
+					break;
+					
+				case Constants.GSTATE_COMBAT_OFFENSE_SELECTCARD: // offense is selecting card for combat
+					update_combatOffenseSelectCard(inputArray);
+					break;
+					
 				case Constants.GSTATE_ENDTURN: // end turn cleanup
 					update_endTurn(inputArray);
 					break;
@@ -440,6 +480,11 @@ package
 			Draw.rect(0, 0, 800, 600, 0xEEEEEE, 1);
 			
 			// draw the board
+			var boardAlpha:Number = 1;
+			if (gameStateIsCombat()) { // dim the board if combat is happening
+				boardAlpha = 0.2;
+			}
+			
 			var boardX:int = 16;
 			var boardY:int = 16;
 			var tileSize:int = 32; // TODO - make this less fragile
@@ -456,7 +501,9 @@ package
 					if (sprite == Constants.BOARD_BOX) // don't use the treasure value as the frame, use only frame 0
 						frame = 0; // TODO - different looking boxes idk refactor that
 					
-					Draw.graphic(Constants.BOARD_SPRITES[sprite][frame], boardX + (j - startCol) * tileSize, boardY + (i - startRow) * tileSize);
+					var boardSprite:Image = Constants.BOARD_SPRITES[sprite][frame];
+					boardSprite.alpha = boardAlpha;
+					Draw.graphic(boardSprite, boardX + (j - startCol) * tileSize, boardY + (i - startRow) * tileSize);
 				}
 			}
 			
@@ -468,16 +515,15 @@ package
 				var horizHeight:Number = (1.0 * tileSize * viewRows) * (1.0 * viewRows / board.length);
 				var horizX:int = boardX - scrollbarSize;
 				var horizY:int = boardY + ((1.0 * tileSize * viewRows) - horizHeight) * (startRow / (board.length - viewRows));
-				Draw.rect(horizX, horizY, scrollbarSize, horizHeight, 0x444444, 1);
+				Draw.rect(horizX, horizY, scrollbarSize, horizHeight, 0x444444, boardAlpha);
 			}
 			if (viewCols < board[0].length)
 			{
 				var vertWidth:Number = (1.0 * tileSize * viewCols) * (1.0 * viewCols / board[0].length);
 				var vertX:int = boardX + ((1.0 * tileSize * viewCols) - vertWidth) * (startCol / (board[0].length - viewCols));
 				var vertY:int = boardY + (tileSize * viewRows);
-				Draw.rect(vertX, vertY, vertWidth, scrollbarSize, 0x444444, 1);
+				Draw.rect(vertX, vertY, vertWidth, scrollbarSize, 0x444444, boardAlpha);
 			}
-			
 			
 			// draw the players on the board
 			for (i = 0; i < players.length; i++)
@@ -488,9 +534,13 @@ package
 				// adjust for the viewport
 				playerPos.row -= startRow;
 				playerPos.col -= startCol;
-				if (playerPos.row >= 0 && playerPos.row < viewRows)
-					if (playerPos.col >= 0 && playerPos.col < viewCols)
-						Draw.graphic(Constants.PLAYER_SPRITES[i], boardX + playerPos.col * tileSize, boardY + playerPos.row * tileSize);
+				if (playerPos.row >= 0 && playerPos.row < viewRows) {
+					if (playerPos.col >= 0 && playerPos.col < viewCols) {
+						var playerSprite:Image = Constants.PLAYER_SPRITES[i];
+						playerSprite.alpha = boardAlpha;
+						Draw.graphic(playerSprite, boardX + playerPos.col * tileSize, boardY + playerPos.row * tileSize);
+					}
+				}
 			}
 			
 			// draw board highlights and stuff
@@ -503,7 +553,7 @@ package
 				spaceCopy.col -= startCol;
 				if (spaceCopy.row >= 0 && spaceCopy.row < viewRows)
 					if (spaceCopy.col >= 0 && spaceCopy.col < viewCols)
-						Draw.rect(boardX + spaceCopy.col * tileSize, boardY + spaceCopy.row * tileSize, tileSize, tileSize, 0x0000FF, 0.25);
+						Draw.rect(boardX + spaceCopy.col * tileSize, boardY + spaceCopy.row * tileSize, tileSize, tileSize, 0x0000FF, 0.25 * boardAlpha);
 			}
 			
 			for each (space in playerWalk) // draw the path the player is walking
@@ -518,7 +568,12 @@ package
 					color = 0x00FFFF;
 				if (spaceCopy.row >= 0 && spaceCopy.row < viewRows)
 					if (spaceCopy.col >= 0 && spaceCopy.col < viewCols)
-						Draw.rect(boardX + spaceCopy.col * tileSize, boardY + spaceCopy.row * tileSize, tileSize, tileSize, color, 0.5);
+						Draw.rect(boardX + spaceCopy.col * tileSize, boardY + spaceCopy.row * tileSize, tileSize, tileSize, color, 0.5 * boardAlpha);
+			}
+			
+			// draw battle overlay if battle is happening
+			if (gameStateIsCombat()) {
+				
 			}
 			
 			// draw the HUD
@@ -809,7 +864,11 @@ package
 					
 					if (isPlayerSpace(newSquare)) { // you're moving onto someone 
 						playerWalk = playerWalk.slice(0, 0); // stop moving
-						// TODO: fight?????
+						// TODO: if the last thing you walk on is a trap it will always be activated. maybe fix
+						
+						// set up the attack. if it's still there after space resolution then fight
+						attackPlayer = players[playerTurn];
+						defensePlayer = playerAtSpace(newSquare);
 					} else {
 						curPlayer.incrementStepsWalked(1);
 						curPlayer.moveToSpace(newSquare);
@@ -887,9 +946,26 @@ package
 					break;
 			}
 			
-			changeState(Constants.GSTATE_ENDTURN);
+			// TODO: confirm attack and defense player are still adjacent
+			if (attackPlayer != null && defensePlayer != null) {
+				changeState(Constants.GSTATE_COMBAT_DEFENSE_SELECT);
+			} else {
+				changeState(Constants.GSTATE_ENDTURN);
+			}
 		}
 		
+		private function update_combatDefenseSelect(inputArray:Array):void {
+			
+		}
+		
+		private function update_combatDefenseSelectCard(inputArray:Array):void {
+			
+		}
+		
+		private function update_combatOffenseSelectCard(inputArray:Array):void {
+			
+		}
+
 		private function update_endTurn(inputArray:Array):void
 		{
 			// do end of turn cleanup
@@ -1131,6 +1207,10 @@ package
 			}
 			
 			return true;
+		}
+		
+		private function gameStateIsCombat():Boolean {
+			return gameState == Constants.GSTATE_COMBAT_DEFENSE_SELECT || gameState == Constants.GSTATE_COMBAT_DEFENSE_SELECTCARD || gameState == Constants.GSTATE_COMBAT_OFFENSE_SELECTCARD;
 		}
 	}
 }

@@ -15,6 +15,9 @@ package
 		public static var GSTATE_SELECTMOVE:int = 4;
 		public static var GSTATE_MOVING:int = 5;
 		public static var GSTATE_ACTIVATESPACE:int = 6;
+		public static var GSTATE_COMBAT_DEFENSE_SELECT:int = 7;
+		public static var GSTATE_COMBAT_DEFENSE_SELECTCARD:int = 8;
+		public static var GSTATE_COMBAT_OFFENSE_SELECTCARD:int = 9;
 		public static var GSTATE_ENDTURN:int = 7;
 		
 		// Graphics things
