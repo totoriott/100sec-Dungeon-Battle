@@ -254,6 +254,7 @@ package
 		public static var COMBAT_DEFENSE_GUARD:int = 1;
 		public static var COMBAT_DEFENSE_RUN:int = 2;
 		public static var COMBAT_DEFENSE_SURRENDER:int = 3;
+		public static var COMBAT_DEFENSE_NOTHING:int = 4; // for stunned or if you fail escape
 		public static var COMBAT_DEFENSE_OPTIONIMAGES:Array;
 		public static function initCombatGraphics():void
 		{

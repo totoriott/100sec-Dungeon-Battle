@@ -11,10 +11,11 @@ package
 		internal var playerNumber:int = -1;
 		
 		internal var level:int = 1;
-		internal var skillPoints:Array = [1, 1, 1, 1];
+		internal var skillPoints:Array = [4, 2, 1, 1];
 		
 		internal var name:String = "Nameless"; // TODO - funny default name
 		internal var hp:int = 10;
+		internal var maxHp:int = 10;
 		internal var credits:int = 0;
 		
 		internal var hand:Vector.<BoardCard>;
@@ -26,7 +27,7 @@ package
 		
 		internal var handicapLevels:int = 0; // levels below highest player. handicap points from this
 		internal var flagPoints:int = 0;
-		internal var damageDealt:int = 0; // attack points calculated from these two
+		internal var damageGiven:int = 0; // attack points calculated from these two
 		internal var enemiesKOed:int = 0;
 		internal var stepsWalked:int = 0; // move points calculated 
 		// item points calculated from items obtained
@@ -56,6 +57,8 @@ package
 			position = mPosition.deepCopy();
 			hand = new Vector.<BoardCard>();
 			items = new Vector.<BoardItem>();
+			
+			maxHp = (skillPoints[Constants.SKILL_HP] * 3) + 7;
 			
 			initUX();
 		}		
@@ -103,7 +106,6 @@ package
 		
 		public function getMaxHp():int
 		{
-			var maxHp:int = (skillPoints[Constants.SKILL_HP] * 3) + 7;
 			return maxHp;
 		}
 		
@@ -161,6 +163,8 @@ package
 			// TODO: display roll somewhere
 			lastCombatRoll.push(Math.ceil(FP.rand(6)+1));
 			lastCombatRoll.push(Math.ceil(FP.rand(6) + 1));
+			var noun:String = onAttack ? "attack" : "defense";
+			trace(name + " " + noun + " roll: " + lastCombatRoll[0] + "," + lastCombatRoll[1] + " -> " + getCombatRollValue(onAttack));
 			return getCombatRollValue(onAttack);
 		}
 		
@@ -180,6 +184,7 @@ package
 			// TODO: display roll somewhere
 			lastEscapeRoll.push(Math.ceil(FP.rand(6)+1));
 			lastEscapeRoll.push(Math.ceil(FP.rand(6) + 1));
+			trace(name + " escape roll: " + lastEscapeRoll[0] + "," + lastEscapeRoll[1] + " -> " + getEscapeRollValue());
 			return getEscapeRollValue();
 		}
 
@@ -202,15 +207,31 @@ package
 			flagPoints += pts;
 		}
 		
+		public function incrementDamageGiven(dmg:int):void {
+			damageGiven += dmg;
+		}
+		
+		public function incrementEnemiesKOed(dmg:int):void {
+			enemiesKOed += dmg;
+		}
+		
 		public function changeHp(delta:int):void {
 			hp += delta;
 			
 			if (hp < 0) {
 				hp = 0;
-				// TODO: oh no! you died
+				// if you die, respawning will happen manually
 			}
 			if (hp > getMaxHp()) {
 				hp = getMaxHp();
+			}
+		}
+		
+		public function respawn():void {
+			if (hp <= 0) {
+				maxHp = Math.ceil(maxHp / 2); // cut max hp in half when you die
+				
+				hp = maxHp;
 			}
 		}
 		
@@ -341,7 +362,7 @@ package
 			var totalPoints:int = 0;
 			totalPoints += handicapLevels * Constants.POINTS_PER_HANDICAP_LEVEL;
 			totalPoints += stepsWalked * Constants.POINTS_PER_STEP;
-			totalPoints += damageDealt * Constants.POINTS_PER_ATTACK_DAMAGE;
+			totalPoints += damageGiven * Constants.POINTS_PER_ATTACK_DAMAGE;
 			totalPoints += enemiesKOed * Constants.POINTS_PER_KO;
 			totalPoints += flagPoints;
 			for (var i:int = 0; i < items.length; i++) {
