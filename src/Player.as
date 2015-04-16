@@ -34,7 +34,14 @@ package
 		internal var card_boardActivated:BoardCard;
 		internal var cardBonus_movement:int = 0;
 		
+		internal var card_combatActivated:BoardCard;
+		internal var cardBonus_attack:int = 0;
+		internal var cardBonus_defense:int = 0;
+		internal var cardBonus_escape:int = 0;
+		
+		internal var lastEscapeRoll:Array = [];
 		internal var lastMovementRoll:Array = [];
+		internal var lastCombatRoll:Array = [];
 		
 		// UX things
 		internal var headerStr:Text;
@@ -134,8 +141,46 @@ package
 		{
 			lastMovementRoll = [];
 			// TODO: display roll somewhere
-			lastMovementRoll.push(Math.ceil(FP.rand(5)+1));
+			lastMovementRoll.push(Math.ceil(FP.rand(6)+1));
 			return getMovementRollValue();
+		}
+		
+		public function getCombatRollValue(onAttack:Boolean):int {
+			var combat:int = onAttack ? getAttack() : getDefense();
+			for (var i:int = 0; i < lastCombatRoll.length; i++) {
+				combat += lastCombatRoll[i];
+			}
+			combat += onAttack ? cardBonus_attack : cardBonus_defense;
+			
+			return combat;
+		}
+		
+		public function doCombatRoll(onAttack:Boolean):int
+		{
+			lastCombatRoll = [];
+			// TODO: display roll somewhere
+			lastCombatRoll.push(Math.ceil(FP.rand(6)+1));
+			lastCombatRoll.push(Math.ceil(FP.rand(6) + 1));
+			return getCombatRollValue(onAttack);
+		}
+		
+		public function getEscapeRollValue():int {
+			var escapeVal:int = getMoveBonus();
+			for (var i:int = 0; i < lastEscapeRoll.length; i++) {
+				escapeVal += lastEscapeRoll[i];
+			}
+			escapeVal += cardBonus_escape;
+			
+			return escapeVal;
+		}
+		
+		public function doEscapeRoll():int
+		{
+			lastEscapeRoll = [];
+			// TODO: display roll somewhere
+			lastEscapeRoll.push(Math.ceil(FP.rand(6)+1));
+			lastEscapeRoll.push(Math.ceil(FP.rand(6) + 1));
+			return getEscapeRollValue();
 		}
 
 		public function moveToSpace(newSpace:BoardPosition):void
@@ -211,6 +256,9 @@ package
 		public function prepareForTurn():void {
 			card_boardActivated = null;
 			cardBonus_movement = 0;
+			cardBonus_attack = 0;
+			cardBonus_defense = 0;
+			cardBonus_escape = 0;
 			
 			initUX();
 		}
@@ -247,6 +295,38 @@ package
 			}
 			
 			// ATK cards should not be usable on board
+			
+			hand.splice(index, 1); // remove the card from the hand	
+			
+			return card;
+		}
+		
+		public function activateCardOnCombat(index:int):BoardCard
+		{
+			var card:BoardCard = hand[index];
+			card_combatActivated = card;
+			
+			if (card.type == Constants.CARD_MOVE) {
+				cardBonus_escape = card.value;
+				
+				if (card.value == Constants.MOVE_EXIT) {
+					cardBonus_escape = 99999; // always guaranteed victory
+				}
+			}
+			
+			if (card.type == Constants.CARD_DEF) {
+				cardBonus_defense = card.value;
+				
+				// TODO: special cards for defense
+			}
+			
+			if (card.type == Constants.CARD_ATK) {
+				cardBonus_attack = card.value;
+				
+				// TODO: special cards for attack
+			}
+			
+			// TRAP cards should not be usable on board
 			
 			hand.splice(index, 1); // remove the card from the hand	
 			
