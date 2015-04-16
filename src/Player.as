@@ -319,9 +319,7 @@ package
 				// TODO: increase trap evasion
 			}
 			
-			if (card.type == Constants.CARD_TRAP) {
-				// TODO: place trap
-			}
+			// TRAPs placed on board in update_doRoll
 			
 			// ATK cards should not be usable on board
 			
