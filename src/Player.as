@@ -123,6 +123,14 @@ package
 			return items; // TODO: does this need deep copy
 		}
 		
+		public function removeItem(index:int):BoardItem {
+			return items.splice(index, 1)[0];
+		}
+		
+		public function addItem(item:BoardItem):void {
+			items.push(item);
+		}
+		
 		public function getMovementRoll():Array  
 		{
 			return Constants.deepCopyArray(lastMovementRoll);

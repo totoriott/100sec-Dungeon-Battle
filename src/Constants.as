@@ -17,9 +17,10 @@ package
 		public static var GSTATE_ACTIVATESPACE:int = 6;
 		public static var GSTATE_COMBAT_DEFENSE_SELECT:int = 7;
 		public static var GSTATE_COMBAT_DEFENSE_SELECTCARD:int = 8;
-		public static var GSTATE_COMBAT_OFFENSE_SELECTCARD:int = 9;
-		public static var GSTATE_COMBAT_RESOLVE:int = 10;
-		public static var GSTATE_ENDTURN:int = 11;
+		public static var GSTATE_COMBAT_DEFENSE_SELECTSURRENDER:int = 9;
+		public static var GSTATE_COMBAT_OFFENSE_SELECTCARD:int = 10;
+		public static var GSTATE_COMBAT_RESOLVE:int = 11;
+		public static var GSTATE_ENDTURN:int = 12;
 		
 		// Graphics things
 		public static var FRAMES_BETWEEN_SQUARES_MOVED:int = 5;
