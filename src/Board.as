@@ -136,6 +136,7 @@ package
 						}
 						
 						var lakesCreated:int = 0;
+						var lakeSquares:int = 0;
 						while (FP.rand(2 * (Math.max(board.length, board[0].length) - lakesCreated)) > 1) { // TODO: tweak this BS formula
 							var holeX:int = FP.rand(board.length);
 							var holeY:int = FP.rand(board[0].length);
@@ -154,8 +155,9 @@ package
 									if (isValidSpace(holePos) &&
 										board[holePos.row][holePos.col].type == Constants.BOARD_EMPTY) {
 										board[holePos.row][holePos.col].changeTo(Constants.BOARD_NULL, 0);
+										lakeSquares++;
 										
-										if (FP.random / spacesInLake > 0.15) { // TODO: more bs numbers
+										if (FP.random / spacesInLake > 0.1) { // TODO: more bs numbers
 											var nextDirection:Vector.<BoardPosition> = new Vector.<BoardPosition>();
 											nextDirection.push(new BoardPosition(holePos.row - 1, holePos.col));
 											nextDirection.push(new BoardPosition(holePos.row + 1, holePos.col));
@@ -164,7 +166,7 @@ package
 											FP.shuffle(nextDirection);
 											
 											for (var kk:int = 0; kk < nextDirection.length; kk++) {
-												if (FP.random > 0.5) {
+												if (FP.random > 0.75) {
 													holeStack.push(nextDirection[kk]);
 												}
 											}
@@ -176,7 +178,9 @@ package
 							}
 						}
 						
-						boardValid = isBoardValid(board);
+						if (lakesCreated >= 6 && lakeSquares > 30) { // otherwise this board is boring
+							boardValid = isBoardValid(board);
+						}
 					}
 					break;
 			}
@@ -228,16 +232,20 @@ package
 		}
 		
 		// Gets a random empty board location and returns it as an x-y pair
-		public function getEmptySpaceOnBoard():BoardPosition
+		public function getEmptySpaceOnBoard():BoardPosition {
+			return getEmptySpaceOnSpecificBoard(board);
+		}
+		
+		public function getEmptySpaceOnSpecificBoard(thisBoard:Vector.<Vector.<BoardSpace>>):BoardPosition
 		{
 			var row:int = -1;
 			var col:int = -1;
 			var tries:int = 0;
 			
-			while (row < 0 || col < 0 || getSpace(row, col).type != Constants.BOARD_EMPTY || isPlayerSpace(new BoardPosition(row, col)))
+			while (row < 0 || col < 0 || thisBoard[row][col].type != Constants.BOARD_EMPTY || isPlayerSpace(new BoardPosition(row, col)))
 			{
-				row = FP.rand(board.length);
-				col = FP.rand(board[0].length);
+				row = FP.rand(thisBoard.length);
+				col = FP.rand(thisBoard[0].length);
 				
 				tries++;
 				if (tries > 100000)
@@ -1064,8 +1072,52 @@ package
 			return false;
 		}
 		
-		private function isBoardValid(board:Vector.<Vector.<BoardSpace>>) {
-			// TODO: this			
+		private function isBoardValid(board:Vector.<Vector.<BoardSpace>>):Boolean {
+			// TODO: this	
+			
+			var markedSpaces:Array = new Array(board.length);
+			for (var i:int = 0; i < board.length; i++)
+			{
+				markedSpaces[i] = new Array(board[0].length);
+				for (var j:int = 0; j < board[0].length; j++)
+				{
+					markedSpaces[i][j] = false;
+				}
+			}
+			
+			var dfsStack:Array = [];
+			var startPos:BoardPosition = getEmptySpaceOnSpecificBoard(board);
+			dfsStack.push(startPos);
+			
+			while (dfsStack.length > 0) {
+				var curSpace:BoardPosition = dfsStack.pop();
+				if (isMoveableSpace(curSpace) && !markedSpaces[curSpace.row][curSpace.col]) {
+					markedSpaces[curSpace.row][curSpace.col] = true;
+					var newPos:BoardPosition = new BoardPosition(curSpace.row - 1, curSpace.col);
+					dfsStack.push(newPos);
+					
+					newPos = new BoardPosition(curSpace.row + 1, curSpace.col);
+					dfsStack.push(newPos);; 
+					
+					newPos = new BoardPosition(curSpace.row, curSpace.col - 1);
+					dfsStack.push(newPos);
+					
+					newPos = new BoardPosition(curSpace.row, curSpace.col + 1);
+					dfsStack.push(newPos);
+				}
+			}
+			
+			for (i = 0; i < board.length; i++)
+			{
+				for (j = 0; j < board[0].length; j++)
+				{
+					if (isMoveableSpace(new BoardPosition(i, j)) && !markedSpaces[i][j]) {
+						return false;
+					}
+				}
+			}
+			
+			return true;
 		}
 	}
 }
