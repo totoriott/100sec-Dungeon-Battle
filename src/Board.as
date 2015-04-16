@@ -32,6 +32,7 @@ package
 		private var defensePlayer:Player;
 		private var selectedDefenseOption:int = 0;
 		private var selectedDefenseCard:int = 0;
+		private var selectedSurrenderItem:int = 0;
 		private var selectedAttackCard:int = 0;
 	
 		private var cardIndex:int = 0; // index of the card the player is selecting
@@ -112,7 +113,6 @@ package
 			trace("Initializing the board.");
 			
 			// Define the board geography
-			// TODO - make the board more interesting than this
 			var boardRows:int = 14;
 			var boardCols:int = 14;
 			var boardInitStyle:int = 1;
@@ -145,7 +145,7 @@ package
 						
 						var lakesCreated:int = 0;
 						var lakeSquares:int = 0;
-						while (FP.rand(2 * (Math.max(board.length, board[0].length) - lakesCreated)) > 1) { // TODO: tweak this BS formula
+						while (FP.random * (2 * (Math.max(board.length, board[0].length) - lakesCreated)) > 1) { // TODO: tweak this BS formula
 							var holeX:int = FP.rand(board.length);
 							var holeY:int = FP.rand(board[0].length);
 							var spacesInLake:int = 0;
@@ -331,7 +331,6 @@ package
 			{
 				case Constants.GSTATE_STARTTURN:
 					// "NEXT TURN"
-					// TODO: other turn start things
 					playerTurn++;
 					if (playerTurn >= players.length)
 						playerTurn = 0;
@@ -360,7 +359,7 @@ package
 					// state-specific stuff
 					cardIndex = -1;
 					break;
-					
+									
 				case Constants.GSTATE_DOROLL:
 					// use the card selected, if one was picked
 					if (cardIndex >= 0)
@@ -391,6 +390,10 @@ package
 					selectedDefenseOption = 0;
 					selectedDefenseCard = -1;
 					selectedAttackCard = -1;
+					selectedSurrenderItem = 0;
+					break;
+					
+				case Constants.GSTATE_COMBAT_DEFENSE_SELECTSURRENDER:
 					break;
 					
 				case Constants.GSTATE_COMBAT_DEFENSE_SELECTCARD:
@@ -400,6 +403,9 @@ package
 					break;
 					
 				case Constants.GSTATE_COMBAT_RESOLVE:
+					performCombat();
+					attackPlayer.initUX();
+					defensePlayer.initUX(); // will happen automatically for attack player
 					break;
 					
 				case Constants.GSTATE_ENDTURN:
@@ -464,6 +470,10 @@ package
 					
 				case Constants.GSTATE_COMBAT_DEFENSE_SELECT: // defense is selecting action for combat
 					update_combatDefenseSelect(inputArray);
+					break;
+					
+				case Constants.GSTATE_COMBAT_DEFENSE_SELECTSURRENDER:
+					update_combatDefenseSelectSurrender(inputArray);
 					break;
 					
 				case Constants.GSTATE_COMBAT_DEFENSE_SELECTCARD: // defense is selecting card for combat
@@ -611,49 +621,89 @@ package
 				}
 				combatY += 80;
 				
-				// draw defender hand
-				var defenseCardAlpha:Number = gameState == (Constants.GSTATE_COMBAT_DEFENSE_SELECTCARD) ? 1 : 0.5; 
-				var dCards:Vector.<BoardCard> = defensePlayer.getCards();
-				for (j = -1; j < dCards.length; j++)
-				{
-					var dCardImage:Image = Constants.IMG_NO_CARD;
-					if (j >= 0) {
-						dCardImage = dCards[j].image;
-					}
-					dCardImage.scale = 0.75; // TODO - hack while i figure card size out
-					dCardImage.alpha = defenseCardAlpha;
+				if (selectedDefenseOption == Constants.COMBAT_DEFENSE_SURRENDER) {
+					var itemSurrenderAlpha:Number = gameState == (Constants.GSTATE_COMBAT_DEFENSE_SELECTSURRENDER) ? 1 : 0.5;
 					
-					var dCardY:int = combatY + 20;
-					if (selectedDefenseCard == j) // if it's the card selected
-						dCardY = combatY;
-					Draw.graphic(dCardImage, combatX + 68 * (j + 1), dCardY);
-				}
-				combatY += 84;
-				
-				// draw attacker
-				playerSprite = Constants.PLAYER_SPRITES[attackPlayer.getPlayerNumber()];
-				playerSprite.alpha = 1;
-				Draw.graphic(playerSprite, combatX, combatY);
-				combatY += 40;
-				
-				// draw attacker hand
-				var attackCardAlpha:Number = gameState == (Constants.GSTATE_COMBAT_OFFENSE_SELECTCARD) ? 1 : 0.5; 
-				var aCards:Vector.<BoardCard> = attackPlayer.getCards();
-				for (j = -1; j < aCards.length; j++)
-				{
-					var aCardImage:Image = Constants.IMG_NO_CARD;
-					if (j >= 0) {
-						aCardImage = aCards[j].image;
+					// draw defender items to surrender
+					var dItems:Vector.<BoardItem> = defensePlayer.getItems();
+					if (dItems.length <= 4) { // 4 items or less 
+						for (j = 0; j < dItems.length; j++) {
+							var dItem:BoardItem = dItems[j];
+							var dItemImage:Image = dItem.image;
+							dItemImage.scale = 0.5; // TODO - hack while i figure card size out (128 / 2 = 64)
+							dItemImage.alpha = itemSurrenderAlpha;
+							var dItemY:int = combatY + 32;
+							if (j == selectedSurrenderItem) {
+								Draw.rect(combatX + 72 * j, dItemY, 72, 72, 0xFFFF00, itemSurrenderAlpha);
+							}
+							
+							if (dItem.id == keyItemId && dItem.fromThisBoard) {
+								Draw.rect(combatX + 72 * j + 8, dItemY + 8, 56, 56, 0xFF0000, itemSurrenderAlpha * 0.5);
+							}
+							Draw.graphic(dItemImage, combatX + 72 * j, dItemY);
+						}
+					} else { // 8 items or less (TODO: if you have more then whoops)
+						for (j = 0; j < dItems.length; j++) {
+							dItem = dItems[j];
+							dItemImage = dItem.image;
+							dItemImage.scale = 0.25; // TODO - hack while i figure card size out (128 / 4 = 32)
+							dItemImage.alpha = itemSurrenderAlpha;
+							dItemY = combatY + 16;
+							if (j == selectedSurrenderItem) {
+								Draw.rect(combatX + 36 * j, dItemY, 36, 36, 0xFFFF00, itemSurrenderAlpha);
+							}
+							
+							if (dItem.id == keyItemId && dItem.fromThisBoard) {
+								Draw.rect(combatX + 36 * j + 4, dItemY + 4, 28, 28, 0xFF0000, itemSurrenderAlpha * 0.5);
+							}
+							Draw.graphic(dItemImage, combatX + 36 * j, dItemY);
+						}
+					} 
+				} else {
+					// draw defender hand
+					var defenseCardAlpha:Number = gameState == (Constants.GSTATE_COMBAT_DEFENSE_SELECTCARD) ? 1 : 0.5; 
+					var dCards:Vector.<BoardCard> = defensePlayer.getCards();
+					for (j = -1; j < dCards.length; j++)
+					{
+						var dCardImage:Image = Constants.IMG_NO_CARD;
+						if (j >= 0) {
+							dCardImage = dCards[j].image;
+						}
+						dCardImage.scale = 0.75; // TODO - hack while i figure card size out
+						dCardImage.alpha = defenseCardAlpha;
+						
+						var dCardY:int = combatY + 20;
+						if (selectedDefenseCard == j) // if it's the card selected
+							dCardY = combatY;
+						Draw.graphic(dCardImage, combatX + 68 * (j + 1), dCardY);
 					}
-					aCardImage.scale = 0.75; // TODO - hack while i figure card size out
-					aCardImage.alpha = attackCardAlpha;
+					combatY += 108;
 					
-					var aCardY:int = combatY + 20;
-					if (selectedAttackCard == j) // if it's the card selected
-						aCardY = combatY;
-					Draw.graphic(aCardImage, combatX + 68 * (j + 1), aCardY);
+					// draw attacker
+					playerSprite = Constants.PLAYER_SPRITES[attackPlayer.getPlayerNumber()];
+					playerSprite.alpha = 1;
+					Draw.graphic(playerSprite, combatX, combatY);
+					combatY += 40;
+					
+					// draw attacker hand
+					var attackCardAlpha:Number = gameState == (Constants.GSTATE_COMBAT_OFFENSE_SELECTCARD) ? 1 : 0.5; 
+					var aCards:Vector.<BoardCard> = attackPlayer.getCards();
+					for (j = -1; j < aCards.length; j++)
+					{
+						var aCardImage:Image = Constants.IMG_NO_CARD;
+						if (j >= 0) {
+							aCardImage = aCards[j].image;
+						}
+						aCardImage.scale = 0.75; // TODO - hack while i figure card size out
+						aCardImage.alpha = attackCardAlpha;
+						
+						var aCardY:int = combatY + 20;
+						if (selectedAttackCard == j) // if it's the card selected
+							aCardY = combatY;
+						Draw.graphic(aCardImage, combatX + 68 * (j + 1), aCardY);
+					}
+					combatY += 84;
 				}
-				combatY += 84;
 			}
 			
 			// draw the HUD
@@ -706,16 +756,16 @@ package
 						
 					case Constants.PLAYERHUD_TYPE_ITEMS:
 						// draw their items
-						// TODO: highlight key items
 						if (items.length <= 4) { // 4 items or less 
 							for (j = 0; j < items.length; j++) {
 								var item:BoardItem = items[j];
 								var itemImage:Image = item.image;
 								itemImage.scale = 0.5; // TODO - hack while i figure card size out (128 / 2 = 64)
+								itemImage.alpha = 1;
 								var itemY:int = playerY + 40;
 								
 								if (item.id == keyItemId && item.fromThisBoard) {
-									Draw.rect(hudX + 72 * j, itemY, 72, 72, 0xFFFF00, 1);
+									Draw.rect(hudX + 72 * j, itemY, 72, 72, 0xFF0000, 0.5);
 								}
 								Draw.graphic(itemImage, hudX + 72 * j, itemY);
 							}
@@ -723,11 +773,12 @@ package
 							for (j = 0; j < items.length; j++) {
 								item = items[j];
 								itemImage = item.image;
+								itemImage.alpha = 1;
 								itemImage.scale = 0.25; // TODO - hack while i figure card size out (128 / 4 = 32)
 								itemY = playerY + 40;
 								
 								if (item.id == keyItemId && item.fromThisBoard) {
-									Draw.rect(hudX + 36 * j, itemY, 36, 36, 0xFFFF00, 1);
+									Draw.rect(hudX + 36 * j, itemY, 36, 36, 0xFF0000, 0.5);
 								}
 								Draw.graphic(itemImage, hudX + 36 * j, itemY);
 							}
@@ -878,8 +929,6 @@ package
 				newSquare.row += 1;
 			else	
 				newSquareSelected = false; // if we didn't input anything we don't really care
-			
-			// TODO: moving onto other players to battle them???
 			
 			if (false) // TODO: remove manual walk selecting
 			{
@@ -1036,46 +1085,93 @@ package
 		}
 		
 		private function update_combatDefenseSelect(inputArray:Array):void {
+			var maxDefenseOption:int = Constants.COMBAT_DEFENSE_OPTIONIMAGES.length - 1;
+			if (defensePlayer.getItems().length == 0) { // nothing to surrender
+				maxDefenseOption--; // lazy hack but we assume that surrender is always last option
+			}
+			
 			// select which defense option will be used
 			if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED)
 			{
-				changeState(Constants.GSTATE_COMBAT_DEFENSE_SELECTCARD);
+				if (selectedDefenseOption == Constants.COMBAT_DEFENSE_SURRENDER) {
+					changeState(Constants.GSTATE_COMBAT_DEFENSE_SELECTSURRENDER);
+				} else {
+					changeState(Constants.GSTATE_COMBAT_DEFENSE_SELECTCARD);
+				}
 			}
 			else if (inputArray[Constants.KEY_LEFT] == Constants.INPUT_PRESSED) {
 				selectedDefenseOption--;
 				if (selectedDefenseOption < 0) {
-					selectedDefenseOption = Constants.COMBAT_DEFENSE_OPTIONIMAGES.length - 1;
+					selectedDefenseOption = maxDefenseOption;
 				}
 			}
 			else if (inputArray[Constants.KEY_RIGHT] == Constants.INPUT_PRESSED) {
 				selectedDefenseOption++;
-				if (selectedDefenseOption >= Constants.COMBAT_DEFENSE_OPTIONIMAGES.length) {
+				if (selectedDefenseOption > maxDefenseOption) {
 					selectedDefenseOption = 0;
+				}
+			}
+		}
+		
+		private function update_combatDefenseSelectSurrender(inputArray:Array):void {
+			if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED)
+			{
+				changeState(Constants.GSTATE_COMBAT_RESOLVE);
+			}
+			else if (inputArray[Constants.KEY_FIRE2] == Constants.INPUT_PRESSED) { // press back to go back one option
+				changeState(Constants.GSTATE_COMBAT_DEFENSE_SELECT);
+				return;
+			}
+			else if (inputArray[Constants.KEY_LEFT] == Constants.INPUT_PRESSED) {
+				selectedSurrenderItem--;
+				if (selectedSurrenderItem < 0) {
+					selectedSurrenderItem = defensePlayer.getItems().length - 1;
+				}
+			}
+			else if (inputArray[Constants.KEY_RIGHT] == Constants.INPUT_PRESSED) {
+				selectedSurrenderItem++;
+				if (selectedSurrenderItem > defensePlayer.getItems().length - 1) {
+					selectedSurrenderItem = 0;
 				}
 			}
 		}
 		
 		private function update_combatDefenseSelectCard(inputArray:Array):void {
 			// select what defense card will be used
-			// TODO: change this if you're picking surrender. surrender is dumb
 			if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED)
 			{
 				changeState(Constants.GSTATE_COMBAT_OFFENSE_SELECTCARD);
 			}
-			else if (inputArray[Constants.KEY_FIRE2] == Constants.INPUT_PRESSED) { // press back to go back one square
+			else if (inputArray[Constants.KEY_FIRE2] == Constants.INPUT_PRESSED) { // press back to go back one option
 				changeState(Constants.GSTATE_COMBAT_DEFENSE_SELECT);
 				return;
 			}
-			else if (inputArray[Constants.KEY_LEFT] == Constants.INPUT_PRESSED) {
-				selectedDefenseCard--;
+			else if (inputArray[Constants.KEY_LEFT] == Constants.INPUT_PRESSED || inputArray[Constants.KEY_RIGHT] == Constants.INPUT_PRESSED) {
+				var cardMoveDirection:int = 0;
+				if (inputArray[Constants.KEY_LEFT] == Constants.INPUT_PRESSED) 
+				{
+					cardMoveDirection = -1;
+				}
+				else if (inputArray[Constants.KEY_RIGHT] == Constants.INPUT_PRESSED)
+				{
+					cardMoveDirection = 1;
+				}
+				
+				selectedDefenseCard += cardMoveDirection;
+				if (selectedDefenseCard >= defensePlayer.getCards().length) {
+					selectedDefenseCard = -1;
+				}
 				if (selectedDefenseCard < -1) {
 					selectedDefenseCard = defensePlayer.getCards().length - 1;
 				}
-			}
-			else if (inputArray[Constants.KEY_RIGHT] == Constants.INPUT_PRESSED) {
-				selectedDefenseCard++;
-				if (selectedDefenseCard >= defensePlayer.getCards().length) {
-					selectedDefenseCard = -1;
+				while (selectedDefenseCard != -1 && !canUseCardForCombat(defensePlayer.getCards()[selectedDefenseCard])) {
+					selectedDefenseCard += cardMoveDirection;
+					if (selectedDefenseCard >= defensePlayer.getCards().length) {
+						selectedDefenseCard = -1;
+					}
+					if (selectedDefenseCard < -1) {
+						selectedDefenseCard = defensePlayer.getCards().length - 1;
+					}
 				}
 			}
 		}
@@ -1087,16 +1183,32 @@ package
 				changeState(Constants.GSTATE_COMBAT_RESOLVE);
 			}
 			// can't go back because defense has locked in
-			else if (inputArray[Constants.KEY_LEFT] == Constants.INPUT_PRESSED) {
-				selectedAttackCard--;
+			else if (inputArray[Constants.KEY_LEFT] == Constants.INPUT_PRESSED || inputArray[Constants.KEY_RIGHT] == Constants.INPUT_PRESSED) {
+				var cardMoveDirection:int = 0;
+				if (inputArray[Constants.KEY_LEFT] == Constants.INPUT_PRESSED) 
+				{
+					cardMoveDirection = -1;
+				}
+				else if (inputArray[Constants.KEY_RIGHT] == Constants.INPUT_PRESSED)
+				{
+					cardMoveDirection = 1;
+				}
+				
+				selectedAttackCard += cardMoveDirection;
+				if (selectedAttackCard >= attackPlayer.getCards().length) {
+					selectedAttackCard = -1;
+				}
 				if (selectedAttackCard < -1) {
 					selectedAttackCard = attackPlayer.getCards().length - 1;
 				}
-			}
-			else if (inputArray[Constants.KEY_RIGHT] == Constants.INPUT_PRESSED) {
-				selectedAttackCard++;
-				if (selectedAttackCard >= attackPlayer.getCards().length) {
-					selectedAttackCard = -1;
+				while (selectedAttackCard != -1 && !canUseCardForCombat(attackPlayer.getCards()[selectedAttackCard])) {
+					selectedAttackCard += cardMoveDirection;
+					if (selectedAttackCard >= attackPlayer.getCards().length) {
+						selectedAttackCard = -1;
+					}
+					if (selectedAttackCard < -1) {
+						selectedAttackCard = attackPlayer.getCards().length - 1;
+					}
 				}
 			}
 		}
@@ -1168,8 +1280,6 @@ package
 				}
 			}
 			
-			// TODO: logic got bad because of reasons
-			
 			var startPos:BoardPosition = new BoardPosition(curPosition.row - 1, curPosition.col);
 			var startWalk:Vector.<BoardPosition> = new Vector.<BoardPosition>();
 			startWalk.push(startPos);
@@ -1233,7 +1343,6 @@ package
 			}
 			
 			playerPossibleMoves = new Vector.<BoardPosition>();
-			// TODO: save path so you don't have to walk path manually
 			for (i = 0; i < board.length; i++) 
 			{
 				for (j = 0; j < board[0].length; j++)
@@ -1279,6 +1388,14 @@ package
 			return true;
 		}
 		
+		private function canUseCardForCombat(card:BoardCard):Boolean {
+			if (card.type == Constants.CARD_TRAP) {
+				return false;
+			}
+			
+			return true;
+		}
+		
 		// i can't believe as3 won't type this properly otherwise
 		private function getSpace(row:int, col:int):BoardSpace {
 			return board[row][col];
@@ -1301,8 +1418,6 @@ package
 		}
 		
 		private function isBoardValid(board:Vector.<Vector.<BoardSpace>>):Boolean {
-			// TODO: this	
-			
 			var markedSpaces:Array = new Array(board.length);
 			for (var i:int = 0; i < board.length; i++)
 			{
@@ -1349,7 +1464,95 @@ package
 		}
 		
 		private function gameStateIsCombat():Boolean {
-			return gameState == Constants.GSTATE_COMBAT_DEFENSE_SELECT || gameState == Constants.GSTATE_COMBAT_DEFENSE_SELECTCARD || gameState == Constants.GSTATE_COMBAT_OFFENSE_SELECTCARD;
+			return gameState == Constants.GSTATE_COMBAT_DEFENSE_SELECT || gameState == Constants.GSTATE_COMBAT_DEFENSE_SELECTCARD || 
+				gameState == Constants.GSTATE_COMBAT_DEFENSE_SELECTSURRENDER || gameState == Constants.GSTATE_COMBAT_OFFENSE_SELECTCARD;
+		}
+		
+		// resolves all the combat stuff. outside of changeState bc it's easier
+		private function performCombat():void { 
+			// TODO: force "nothing" option if defense is stunned
+			
+			// use the card selected, if one was picked
+			if (selectedAttackCard >= 0)
+			{
+				attackPlayer.activateCardOnCombat(selectedAttackCard);
+			}
+			if (selectedDefenseCard >= 0)
+			{
+				defensePlayer.activateCardOnCombat(selectedDefenseCard);
+			}
+			
+			if (selectedDefenseOption == Constants.COMBAT_DEFENSE_SURRENDER) {
+				trace("Surrendered.");
+				// surrender the item
+				var transferItem:BoardItem = defensePlayer.removeItem(selectedSurrenderItem);
+				attackPlayer.addItem(transferItem);
+				
+				// defense teleports away
+				defensePlayer.moveToSpace(getEmptySpaceOnBoard()); 
+				
+				return; // end combat
+			}
+			
+			if (selectedDefenseOption == Constants.COMBAT_DEFENSE_RUN) {
+				var attackEscape:int = attackPlayer.doEscapeRoll();
+				var defenseEscape:int = defensePlayer.doEscapeRoll();
+				
+				if (attackEscape >= defenseEscape) {
+					trace("Escape failed!");
+					selectedDefenseOption = Constants.COMBAT_DEFENSE_NOTHING;
+				} else {
+					trace("Escape succeeded!");
+					return; // end combat
+				}
+			}
+			
+			var attackValue:int = attackPlayer.doCombatRoll(true);
+			var defenseValue:int = defensePlayer.doCombatRoll(false);
+			
+			if (selectedDefenseOption == Constants.COMBAT_DEFENSE_GUARD) {
+				defenseValue += defensePlayer.getDefense(); // double defense of defender
+				trace(defensePlayer.getName() + " defends. Defense roll is now " + defenseValue);
+			}
+			
+			// do the attack
+			var damage:int = Math.max(0, attackValue - defenseValue);
+			attackPlayer.incrementDamageGiven(damage);
+			trace(damage + " damage dealt.");
+			defensePlayer.changeHp( -1 * damage);
+			
+			if (defensePlayer.getHp() <= 0) {
+				trace(defensePlayer.getName() + " was defeated!");
+				attackPlayer.incrementEnemiesKOed(1);
+				defensePlayer.respawn();
+				defensePlayer.moveToSpace(getEmptySpaceOnBoard()); 
+				return; // end combat 
+			}
+			
+			if (selectedDefenseOption == Constants.COMBAT_DEFENSE_COUNTER) {
+				// now the counterattack!
+				trace(defensePlayer.getName() + " counterattacks.");
+				
+				attackValue = defensePlayer.doCombatRoll(true);
+				defenseValue = attackPlayer.doCombatRoll(false);
+
+				// do the attack
+				damage = Math.max(0, attackValue - defenseValue);
+				defensePlayer.incrementDamageGiven(damage);
+				trace(damage + " damage dealt.");
+				attackPlayer.changeHp( -1 * damage);
+				
+				if (attackPlayer.getHp() <= 0) {
+					trace(attackPlayer.getName() + " was defeated!");
+					defensePlayer.incrementEnemiesKOed(1);
+					attackPlayer.respawn();
+					attackPlayer.moveToSpace(getEmptySpaceOnBoard()); 
+					return; // end combat 
+				}
+			}
+			
+			trace();
+			// combat is over
 		}
 	}
 }
