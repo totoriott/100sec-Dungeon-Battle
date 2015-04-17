@@ -726,11 +726,11 @@ package
 				headerStr.color = 0x000000;
 					
 				headerStr.alpha = 1;
+				if (i == playerTurn) { // draw highlight if it's their turn
+					Draw.rect(hudX - 8, playerY , 296, 148, Constants.PLAYER_IMAGECOLORS[i], 0.66);
+				}
 				if (playerHasKeyItem(player)) { // draw highlight if they have key item 
 					Draw.rect(hudX, playerY+8, 208, 16, 0xFFFF00, 1);
-				}
-				if (i == playerTurn) { // draw highlight if it's their turn
-					Draw.rect(hudX, playerY+8, 104, 16, Constants.PLAYER_IMAGECOLORS[i], 1);
 				}
 				Draw.graphic(headerStr, hudX, playerY);
 				Draw.graphic(player.getHpStr(), hudX + 208, playerY);
@@ -1521,6 +1521,7 @@ package
 			trace(damage + " damage dealt.");
 			defensePlayer.changeHp( -1 * damage);
 			
+			// TODO: criticals?
 			if (defensePlayer.getHp() <= 0) {
 				trace(defensePlayer.getName() + " was defeated!");
 				attackPlayer.incrementEnemiesKOed(1);
