@@ -6,6 +6,9 @@ package
 	
 	public class Constants
 	{
+		public static var GAME_WIDTH:int = 800;
+		public static var GAME_HEIGHT:int = 600;
+		
 		// Game state
 		public static var GSTATE_GAMEOVER:int = -1;
 		public static var GSTATE_STARTTURN:int = 0;

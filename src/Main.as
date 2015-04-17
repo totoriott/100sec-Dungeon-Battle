@@ -7,7 +7,7 @@ package
 	{
 		public function Main()
 		{
-			super(1024, 768, 60, false);
+			super(800, 600, 60, false); // TODO: do you want bigger game
 			
 			Constants.initGraphics();
 			Constants.initCombatGraphics();

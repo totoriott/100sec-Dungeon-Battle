@@ -131,6 +131,11 @@ package
 			items.push(item);
 		}
 		
+		// TODO: does this hilariously wreck MVC modeling? yes but w/e
+		public function createMovementRollOverlay():OverlayMovementRoll {
+			return new OverlayMovementRoll(getMovementRoll(), getMoveBonus(), cardBonus_movement, getMovementRollValue());
+		}
+		
 		public function getMovementRoll():Array  
 		{
 			return Constants.deepCopyArray(lastMovementRoll);
@@ -155,6 +160,11 @@ package
 			return getMovementRollValue();
 		}
 		
+		public function getCombatRoll():Array  
+		{
+			return Constants.deepCopyArray(lastCombatRoll);
+		}
+		
 		public function getCombatRollValue(onAttack:Boolean):int {
 			var combat:int = onAttack ? getAttack() : getDefense();
 			for (var i:int = 0; i < lastCombatRoll.length; i++) {
@@ -174,6 +184,11 @@ package
 			var noun:String = onAttack ? "attack" : "defense";
 			trace(name + " " + noun + " roll: " + lastCombatRoll[0] + "," + lastCombatRoll[1] + " -> " + getCombatRollValue(onAttack));
 			return getCombatRollValue(onAttack);
+		}
+		
+		public function getEscapeRoll():Array  
+		{
+			return Constants.deepCopyArray(lastEscapeRoll);
 		}
 		
 		public function getEscapeRollValue():int {

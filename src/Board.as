@@ -41,6 +41,7 @@ package
 		private var playerPossibleWalks:Vector.<Vector.<Vector.<Vector.<BoardPosition>>>>; // the board, where each square is possible walks to that square this turn
 		
 		private var moveTimer:int = 0; 
+		public var overlaysQueue:Vector.<GraphicOverlay>;
 		
 		public function Board() 
 		{
@@ -59,7 +60,10 @@ package
 			
 			playerHudType = Constants.PLAYERHUD_TYPE_CARDS;
 			
+			overlaysQueue = new Vector.<GraphicOverlay>();
+			
 			// TODO - decide first player
+			// TODO - you turned off flash debugger in tools to increase framerate. LMK if this is weird
 		}
 		
 		public function createNewDeck():void
@@ -369,9 +373,12 @@ package
 					
 					//state-specific stuff
 					playerWalk = new Vector.<BoardPosition>(); // the squares the current player is walking this turn
-					var playerRoll:int = players[playerTurn].doMovementRoll();
+					curPlayer = players[playerTurn];
+					var playerRoll:int = curPlayer.doMovementRoll();
 					
 					playerPossibleMoves = getPlayerPossibleMoves(); // the squares the current player could move to this turn
+					
+					queueOverlay(curPlayer.createMovementRollOverlay()); // TODO: pass it a roll
 					break;
 					
 				case Constants.GSTATE_SELECTMOVE:
@@ -425,6 +432,16 @@ package
 			{
 				initNewGame();
 				return;
+			}
+			
+			if (overlaysQueue.length > 0) {
+				var overlay:GraphicOverlay = overlaysQueue[0];
+				overlay.update(inputArray);
+				if (overlay.isDoneShowing()) {
+					overlaysQueue.splice(0, 1); // remove the first overlay when it's done
+				}
+				
+				return; // don't update anything while showing overlays
 			}
 			
 			if (inputArray[Constants.KEY_FIRE5] == Constants.INPUT_PRESSED) { // toggle player HUD display
@@ -786,6 +803,13 @@ package
 						break;
 				}
 				
+			}
+			
+			// draw the first overlay in the queue
+			if (overlaysQueue.length > 0) {
+				var overlay:GraphicOverlay = overlaysQueue[0];
+				
+				overlay.render(0, 0);
 			}
 			
 			// DEBUG TODO - output the framerate
@@ -1554,6 +1578,10 @@ package
 			
 			trace();
 			// combat is over
+		}
+		
+		public function queueOverlay(overlay:GraphicOverlay):void {
+			overlaysQueue.push(overlay);
 		}
 	}
 }
