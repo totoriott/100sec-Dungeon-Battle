@@ -26,7 +26,7 @@ package
 		private var cardBonusText:Text;
 		private var totalRollText:Text;
 		
-		public function OverlayMovementRoll(aDice:Array, aMoveBonus:int, aCardBonus:int, aTotalRoll:int) 
+		public function OverlayMovementRoll(player:Player, aDice:Array, aMoveBonus:int, aCardBonus:int, aTotalRoll:int) 
 		{
 			timer = 0;
 			

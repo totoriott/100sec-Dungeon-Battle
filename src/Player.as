@@ -133,7 +133,7 @@ package
 		
 		// TODO: does this hilariously wreck MVC modeling? yes but w/e
 		public function createMovementRollOverlay():OverlayMovementRoll {
-			return new OverlayMovementRoll(getMovementRoll(), getMoveBonus(), cardBonus_movement, getMovementRollValue());
+			return new OverlayMovementRoll(this, getMovementRoll(), getMoveBonus(), cardBonus_movement, getMovementRollValue());
 		}
 		
 		public function getMovementRoll():Array  
