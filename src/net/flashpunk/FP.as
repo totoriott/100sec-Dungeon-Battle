@@ -8,13 +8,14 @@
 	import flash.geom.Rectangle;
 	import flash.media.SoundMixer;
 	import flash.media.SoundTransform;
-	import flash.system.System;
 	import flash.utils.ByteArray;
+	import flash.utils.Dictionary;
 	import flash.utils.getTimer;
-	import net.flashpunk.*;
+
 	import net.flashpunk.debug.Console;
+	import net.flashpunk.tweens.misc.Alarm;
 	import net.flashpunk.tweens.misc.MultiVarTween;
-	
+
 	/**
 	 * Static catch-all class used to access global properties and functions.
 	 */
@@ -23,7 +24,7 @@
 		/**
 		 * The FlashPunk major version.
 		 */
-		public static const VERSION:String = "1.4";
+		public static const VERSION:String = "1.7.2";
 		
 		/**
 		 * Width of the game.
@@ -36,9 +37,25 @@
 		public static var height:uint;
 		
 		/**
+		 * Half width of the game.
+		 */
+		public static var halfWidth:Number;
+		
+		/**
+		 * Half height of the game.
+		 */
+		public static var halfHeight:Number;
+		
+		/**
 		 * If the game is running at a fixed framerate.
 		 */
 		public static var fixed:Boolean;
+		
+		/**
+		 * If times should be given in frames (as opposed to seconds).
+		 * Default is true in fixed timestep mode and false in variable timestep mode.
+		 */
+		public static var timeInFrames:Boolean;
 		
 		/**
 		 * The framerate assigned to the stage.
@@ -51,12 +68,12 @@
 		public static var assignedFrameRate:Number;
 		
 		/**
-		 * Time elapsed since the last frame (non-fixed framerate only).
+		 * Time elapsed since the last frame (in seconds).
 		 */
 		public static var elapsed:Number;
 		
 		/**
-		 * Timescale applied to FP.elapsed (non-fixed framerate only).
+		 * Timescale applied to FP.elapsed.
 		 */
 		public static var rate:Number = 1;
 		
@@ -81,14 +98,30 @@
 		public static var camera:Point = new Point;
 		
 		/**
-		 * Half the screen width.
+		 * Global Tweener for tweening values across multiple worlds.
 		 */
-		public static function get halfWidth():Number { return width / 2; }
+		public static var tweener:Tweener = new Tweener;
 		
 		/**
-		 * Half the screen height.
+		 * If the game currently has input focus or not. Note: may not be correct initially.
 		 */
-		public static function get halfHeight():Number { return height / 2; }
+		public static var focused:Boolean = true;
+		
+		/**
+		 * Resize the screen.
+		 * @param width		New width.
+		 * @param height	New height.
+		 */
+		public static function resize(width:int, height:int):void
+		{
+			FP.width = width;
+			FP.height = height;
+			FP.halfWidth = width/2;
+			FP.halfHeight = height/2;
+			FP.bounds.width = width;
+			FP.bounds.height = height;
+			FP.screen.resize();
+		}
 		
 		/**
 		 * The currently active World object. When you set this, the World is flagged
@@ -97,7 +130,11 @@
 		public static function get world():World { return _world; }
 		public static function set world(value:World):void
 		{
-			if (_world == value) return;
+			if (_goto) {
+				if (_goto == value) return;
+			} else {
+				if (_world == value) return;
+			}
 			_goto = value;
 		}
 		
@@ -146,8 +183,25 @@
 		}
 		
 		/**
+		 * Remove an element from an array
+		 * @return	True if element existed and has been removed, false if element was not in array.
+		 */
+		public static function remove(array:*, toRemove:*):Boolean
+		{
+			var i:int = array.indexOf(toRemove);
+			
+			if (i >= 0) {
+				array.splice(i, 1);
+			
+				return true;
+			} else {
+				return false;
+			}
+		}
+		
+		/**
 		 * Randomly chooses and returns one of the provided values.
-		 * @param	...objs		The Objects you want to randomly choose from. Can be ints, Numbers, Points, etc.
+		 * @param	objs		The Objects you want to randomly choose from. Can be ints, Numbers, Points, etc.
 		 * @return	A randomly chosen one of the provided parameters.
 		 */
 		public static function choose(...objs):*
@@ -159,7 +213,7 @@
 		/**
 		 * Finds the sign of the provided value.
 		 * @param	value		The Number to evaluate.
-		 * @return	1 if value > 0, -1 if value < 0, and 0 when value == 0.
+		 * @return	1 if value &gt; 0, -1 if value &lt; 0, and 0 when value == 0.
 		 */
 		public static function sign(value:Number):int
 		{
@@ -175,7 +229,13 @@
 		 */
 		public static function approach(value:Number, target:Number, amount:Number):Number
 		{
-			return value < target ? (target < value + amount ? target : value + amount) : (target > value - amount ? target : value - amount);
+			if (value < target - amount) {
+				return value + amount;
+			} else if (value > target + amount) {
+				return value - amount;
+			} else {
+				return target;
+			}
 		}
 		
 		/**
@@ -295,6 +355,21 @@
 		}
 		
 		/**
+		 * Gets the difference of two angles, wrapped around to the range -180 to 180.
+		 * @param	a	First angle in degrees.
+		 * @param	b	Second angle in degrees.
+		 * @return	Difference in angles, wrapped around to the range -180 to 180.
+		 */
+		public static function angleDiff(a:Number, b:Number):Number
+		{
+			var diff:Number = b - a;
+
+			while (diff > 180) { diff -= 360; }
+			while (diff <= -180) { diff += 360; }
+
+			return diff;
+		}
+		/**
 		 * Find the distance between two points.
 		 * @param	x1		The first x-position.
 		 * @param	y1		The first y-position.
@@ -384,11 +459,15 @@
 		{
 			if (max > min)
 			{
-				value = value < max ? value : max;
-				return value > min ? value : min;
+				if (value < min) return min;
+				else if (value > max) return max;
+				else return value;
+			} else {
+				// Min/max swapped
+				if (value < max) return max;
+				else if (value > min) return min;
+				else return value;
 			}
-			value = value < min ? value : min;
-			return value > max ? value : max;
 		}
 		
 		/**
@@ -459,7 +538,7 @@
 		}
 		
 		/**
-		 * A pseudo-random Number produced using FP's random seed, where 0 <= Number < 1.
+		 * A pseudo-random Number produced using FP's random seed, where 0 &lt;= Number &lt; 1.
 		 */
 		public static function get random():Number
 		{
@@ -469,7 +548,7 @@
 		
 		/**
 		 * Returns a pseudo-random uint.
-		 * @param	amount		The returned uint will always be 0 <= uint < amount.
+		 * @param	amount		The returned uint will always be 0 &lt;= uint &lt; amount.
 		 * @return	The uint.
 		 */
 		public static function rand(amount:uint):uint
@@ -537,9 +616,12 @@
 		 */
 		public static function getColorHSV(h:Number, s:Number, v:Number):uint
 		{
+			h = h < 0 ? 0 : (h > 1 ? 1 : h);
+			s = s < 0 ? 0 : (s > 1 ? 1 : s);
+			v = v < 0 ? 0 : (v > 1 ? 1 : v);
 			h = int(h * 360);
-			var hi:int = Math.floor(h / 60) % 6,
-				f:Number = h / 60 - Math.floor(h / 60),
+			var hi:int = int(h / 60) % 6,
+				f:Number = h / 60 - int(h / 60),
 				p:Number = (v * (1 - s)),
 				q:Number = (v * (1 - f * s)),
 				t:Number = (v * (1 - (1 - f) * s));
@@ -553,7 +635,55 @@
 				case 5: return int(v * 255) << 16 | int(p * 255) << 8 | int(q * 255);
 				default: return 0;
 			}
-			return 0;
+		}
+		
+		public static function getColorHue(color:uint):Number
+		{
+			var r:uint = (color >> 16) & 0xFF;
+			var g:uint = (color >> 8) & 0xFF;
+			var b:uint = color & 0xFF;
+			
+			var max:uint = Math.max(r, g, b);
+			var min:uint = Math.min(r, g, b);
+			
+			var hue:uint = 0;
+			 
+			if (max == min) {
+				hue = 0;
+			} else if (max == r) {
+				hue = (60 * (g-b) / (max-min) + 360) % 360;
+			} else if (max == g) {
+				hue = (60 * (b-r) / (max-min) + 120);
+			} else if (max == b) {
+				hue = (60 * (r-g) / (max-min) + 240);
+			}
+			
+			return hue / 360;
+		}
+		
+		public static function getColorSaturation(color:uint):Number
+		{
+			var r:uint = (color >> 16) & 0xFF;
+			var g:uint = (color >> 8) & 0xFF;
+			var b:uint = color & 0xFF;
+			
+			var max:uint = Math.max(r, g, b);
+			var min:uint = Math.min(r, g, b);
+			
+			if (max == 0) {
+				return 0;
+			} else {
+				return (max - min) / max;
+			}
+		}
+		
+		public static function getColorValue(color:uint):Number
+		{
+			var r:uint = (color >> 16) & 0xFF;
+			var g:uint = (color >> 8) & 0xFF;
+			var b:uint = color & 0xFF;
+			
+			return Math.max(r, g, b) / 255;
 		}
 		
 		/**
@@ -593,8 +723,16 @@
 		 */
 		public static function getBitmap(source:Class):BitmapData
 		{
-			if (_bitmap[String(source)]) return _bitmap[String(source)];
-			return (_bitmap[String(source)] = (new source).bitmapData);
+			if (_bitmap[source]) return _bitmap[source];
+			return (_bitmap[source] = (new source).bitmapData);
+		}
+		
+		/**
+		 * Clears the cache of BitmapData objects used by the getBitmap method.
+		 */
+		public static function clearBitmapCache():void
+		{
+			_bitmap = new Dictionary();
 		}
 		
 		/**
@@ -620,7 +758,7 @@
 		
 		/**
 		 * Logs data to the console.
-		 * @param	...data		The data parameters to log, can be variables, objects, etc. Parameters will be separated by a space (" ").
+		 * @param	data		The data parameters to log, can be variables, objects, etc. Parameters will be separated by a space (" ").
 		 */
 		public static function log(...data):void
 		{
@@ -642,7 +780,7 @@
 		
 		/**
 		 * Adds properties to watch in the console's debug panel.
-		 * @param	...properties		The properties (strings) to watch.
+		 * @param	properties		The properties (strings) to watch.
 		 */
 		public static function watch(...properties):void
 		{
@@ -674,6 +812,7 @@
 		 * 						complete	Optional completion callback function.
 		 * 						ease		Optional easer function.
 		 * 						tweener		The Tweener to add this Tween to.
+		 * 						delay		A length of time to wait before starting this tween.
 		 * @return	The added MultiVarTween object.
 		 * 
 		 * Example: FP.tween(object, { x: 500, y: 350 }, 2.0, { ease: easeFunction, complete: onComplete } );
@@ -683,19 +822,43 @@
 			var type:uint = Tween.ONESHOT,
 				complete:Function = null,
 				ease:Function = null,
-				tweener:Tweener = FP.world;
+				tweener:Tweener = FP.tweener,
+				delay:Number = 0;
 			if (object is Tweener) tweener = object as Tweener;
 			if (options)
 			{
+				if (options is Function) complete = options as Function;
 				if (options.hasOwnProperty("type")) type = options.type;
 				if (options.hasOwnProperty("complete")) complete = options.complete;
 				if (options.hasOwnProperty("ease")) ease = options.ease;
 				if (options.hasOwnProperty("tweener")) tweener = options.tweener;
+				if (options.hasOwnProperty("delay")) delay = options.delay;
 			}
 			var tween:MultiVarTween = new MultiVarTween(complete, type);
-			tween.tween(object, values, duration, ease);
+			tween.tween(object, values, duration, ease, delay);
 			tweener.addTween(tween);
 			return tween;
+		}
+		
+		/**
+		 * Schedules a callback for the future. Shorthand for creating an Alarm tween, starting it and adding it to a Tweener.
+		 * @param	delay		The duration to wait before calling the callback.
+		 * @param	callback	The function to be called.
+		 * @param	type		The tween type (PERSIST, LOOPING or ONESHOT). Defaults to ONESHOT.
+		 * @param	tweener		The Tweener object to add this Alarm to. Defaults to FP.tweener.
+		 * @return	The added Alarm object.
+		 * 
+		 * Example: FP.alarm(5.0, callbackFunction, Tween.LOOPING); // Calls callbackFunction every 5 seconds
+		 */
+		public static function alarm(delay:Number, callback:Function, type:uint = 2, tweener:Tweener = null):Alarm
+		{
+			if (! tweener) tweener = FP.tweener;
+			
+			var alarm:Alarm = new Alarm(delay, callback, type);
+			
+			tweener.addTween(alarm, true);
+			
+			return alarm;
 		}
 		
 		/**
@@ -752,7 +915,14 @@
 		 */
 		public static function sort(object:Object, ascending:Boolean = true):void
 		{
-			if (object is Array || object is Vector.<*>) quicksort(object, 0, object.length - 1, ascending);
+			if (object is Array || object is Vector.<*>)
+			{
+				// Only need to sort the array if it has more than one item.
+				if (object.length > 1)
+				{
+					quicksort(object, 0, object.length - 1, ascending);
+				}
+			}
 		}
 		
 		/**
@@ -763,12 +933,19 @@
 		 */
 		public static function sortBy(object:Object, property:String, ascending:Boolean = true):void
 		{
-			if (object is Array || object is Vector.<*>) quicksortBy(object, 0, object.length - 1, ascending, property);
+			if (object is Array || object is Vector.<*>)
+			{
+				// Only need to sort the array if it has more than one item.
+				if (object.length > 1)
+				{
+					quicksortBy(object, 0, object.length - 1, ascending, property);
+				}
+			}
 		}
 		
 		/** @private Quicksorts the array. */ 
 		private static function quicksort(a:Object, left:int, right:int, ascending:Boolean):void
-		{
+		{		
 			var i:int = left, j:int = right, t:Number,
 				p:* = a[Math.round((left + right) * .5)];
 			if (ascending)
@@ -805,7 +982,7 @@
 		
 		/** @private Quicksorts the array by the property. */ 
 		private static function quicksortBy(a:Object, left:int, right:int, ascending:Boolean, property:String):void
-		{
+		{			
 			var i:int = left, j:int = right, t:Object,
 				p:* = a[Math.round((left + right) * .5)][property];
 			if (ascending)
@@ -855,9 +1032,9 @@
 		/** @private */ public static var _flashTime:uint;
 		
 		// Bitmap storage.
-		/** @private */ private static var _bitmap:Object = { };
+		/** @private */ private static var _bitmap:Dictionary = new Dictionary();
 		
-		// Pseudo-random number generation (the seed is set in Engine's contructor).
+		// Pseudo-random number generation (the seed is set in Engine's constructor).
 		/** @private */ private static var _seed:uint = 0;
 		/** @private */ private static var _getSeed:uint;
 		

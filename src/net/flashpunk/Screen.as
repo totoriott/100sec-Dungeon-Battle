@@ -5,10 +5,9 @@
 	import flash.display.PixelSnapping;
 	import flash.display.Sprite;
 	import flash.geom.Matrix;
-	import flash.geom.Point;
-	import flash.geom.Transform;
+
 	import net.flashpunk.graphics.Image;
-	
+
 	/**
 	 * Container for the main screen buffer. Can be used to transform the screen.
 	 */
@@ -19,16 +18,33 @@
 		 */
 		public function Screen() 
 		{
-			// create screen buffers
-			_bitmap[0] = new Bitmap(new BitmapData(FP.width, FP.height, false, 0), PixelSnapping.NEVER);
-			_bitmap[1] = new Bitmap(new BitmapData(FP.width, FP.height, false, 0), PixelSnapping.NEVER);
 			FP.engine.addChild(_sprite);
+			resize();
+			update();
+		}
+		
+		/**
+		 * Initialise buffers to current screen size.
+		 */
+		public function resize():void
+		{
+			if (_bitmap[0]) {
+				_sprite.removeChild(_bitmap[0]);
+				_sprite.removeChild(_bitmap[1]);
+				
+				_bitmap[0].bitmapData.dispose();
+				_bitmap[1].bitmapData.dispose();
+			}
+			
+			// create screen buffers
+			_bitmap[0] = new Bitmap(new BitmapData(FP.width, FP.height, false, _color), PixelSnapping.NEVER);
+			_bitmap[1] = new Bitmap(new BitmapData(FP.width, FP.height, false, _color), PixelSnapping.NEVER);
 			_sprite.addChild(_bitmap[0]).visible = true;
 			_sprite.addChild(_bitmap[1]).visible = false;
 			FP.buffer = _bitmap[0].bitmapData;
 			_width = FP.width;
 			_height = FP.height;
-			update();
+			_current = 0;
 		}
 		
 		/**
@@ -187,12 +203,12 @@
 		/**
 		 * X position of the mouse on the screen.
 		 */
-		public function get mouseX():int { return (FP.stage.mouseX - _x) / (_scaleX * _scale); }
+		public function get mouseX():int { return _sprite.mouseX; }
 		
 		/**
 		 * Y position of the mouse on the screen.
 		 */
-		public function get mouseY():int { return (FP.stage.mouseY - _y) / (_scaleY * _scale); }
+		public function get mouseY():int { return _sprite.mouseY; }
 		
 		/**
 		 * Captures the current screen as an Image object.
@@ -203,7 +219,7 @@
 			return new Image(_bitmap[_current].bitmapData.clone());
 		}
 		
-		// Screen infromation.
+		// Screen information.
 		/** @private */ private var _sprite:Sprite = new Sprite;
 		/** @private */ private var _bitmap:Vector.<Bitmap> = new Vector.<Bitmap>(2);
 		/** @private */ private var _current:int = 0;
@@ -218,6 +234,6 @@
 		/** @private */ private var _scaleY:Number = 1;
 		/** @private */ private var _scale:Number = 1;
 		/** @private */ private var _angle:Number = 0;
-		/** @private */ private var _color:uint = 0x202020;
+		/** @private */ private var _color:uint = 0xFF202020;
 	}
 }

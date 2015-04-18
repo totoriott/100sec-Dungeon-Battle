@@ -130,16 +130,15 @@
 		private static function loadData(file:String):Object
 		{
 			if (!file) file = DEFAULT_FILE;
-			if (id) _shared = SharedObject.getLocal(PREFIX + "/" + id + "/" + file, "/");
-			else _shared = SharedObject.getLocal(PREFIX + "/" + file);
+			if (id) _shared = SharedObject.getLocal(prefix + "/" + id + "/" + file, "/");
+			else _shared = SharedObject.getLocal(prefix + "/" + file);
 			return _shared.data;
 		}
 		
 		// Data information.
 		/** @private */ private static var _shared:SharedObject;
-		/** @private */ private static var _dir:String;
 		/** @private */ private static var _data:Object = { };
-		/** @private */ private static const PREFIX:String = "FlashPunk";
+		/** @private */ public static var prefix:String = "FlashPunk";
 		/** @private */ private static const DEFAULT_FILE:String = "_file";
 		/** @private */ private static const SIZE:uint = 10000;
 	}

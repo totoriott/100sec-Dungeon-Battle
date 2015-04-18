@@ -13,6 +13,7 @@
 		public static const DOWN:int = 40;
 		
 		public static const ENTER:int = 13;
+		public static const COMMAND:int = 15;
 		public static const CONTROL:int = 17;
 		public static const SPACE:int = 32;
 		public static const SHIFT:int = 16;
@@ -82,7 +83,7 @@
 		public static const DIGIT_7:int = 55;
 		public static const DIGIT_8:int = 56;
 		public static const DIGIT_9:int = 57;
-		
+
 		public static const NUMPAD_0:int = 96;
 		public static const NUMPAD_1:int = 97;
 		public static const NUMPAD_2:int = 98;
@@ -187,7 +188,6 @@
 				default:
 				return String.fromCharCode(char);
 			}
-			return String.fromCharCode(char);
 		}
 	}
 }

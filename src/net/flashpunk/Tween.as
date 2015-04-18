@@ -31,6 +31,11 @@
 		public var complete:Function;
 		
 		/**
+		 * Length of time to wait before starting this tween.
+		 */
+		public var delay:Number = 0;
+		
+		/**
 		 * Constructor. Specify basic information about the Tween.
 		 * @param	duration		Duration of the tween (in seconds or frames).
 		 * @param	type			Tween type, one of Tween.PERSIST (default), Tween.LOOPING, or Tween.ONESHOT.
@@ -50,14 +55,26 @@
 		 */
 		public function update():void
 		{
-			_time += FP.fixed ? 1 : FP.elapsed;
+			var dt:Number = FP.timeInFrames ? 1 : FP.elapsed;
+			if (delay > 0) {
+				delay -= dt;
+				
+				if (delay > 0) {
+					return;
+				} else {
+					_time -= delay;
+				}
+			} else {
+				_time += dt;
+			}
+			
 			_t = _time / _target;
-			if (_ease != null && _t > 0 && _t < 1) _t = _ease(_t);
 			if (_time >= _target)
 			{
 				_t = 1;
 				_finish = true;
 			}
+			if (_ease != null) _t = _ease(_t);
 		}
 		
 		/**
@@ -74,22 +91,31 @@
 			active = true;
 		}
 		
+		/**
+		 * Immediately stops the Tween and removes it from its Tweener without calling the complete callback.
+		 */
+		public function cancel():void
+		{
+			active = false;
+			if (_parent) _parent.removeTween(this);
+		}
+		
 		/** @private Called when the Tween completes. */
 		internal function finish():void
 		{
 			switch (_type)
 			{
-				case 0:
+				case PERSIST:
 					_time = _target;
 					active = false;
 					break;
-				case 1:
+				case LOOPING:
 					_time %= _target;
 					_t = _time / _target;
-					if (_ease != null && _t > 0 && _t < 1) _t = _ease(_t);
+					if (_ease != null) _t = _ease(_t);
 					start();
 					break;
-				case 2:
+				case ONESHOT:
 					_time = _target;
 					active = false;
 					_parent.removeTween(this);

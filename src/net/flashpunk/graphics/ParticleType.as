@@ -2,6 +2,7 @@
 {
 	import flash.display.BitmapData;
 	import flash.geom.Rectangle;
+	
 	import net.flashpunk.FP;
 	
 	/**
@@ -17,7 +18,6 @@
 		 * @param	source			Source image.
 		 * @param	frameWidth		Frame width.
 		 * @param	frameHeight		Frame height.
-		 * @param	frameCount		Frame count.
 		 */
 		public function ParticleType(name:String, frames:Array, source:BitmapData, frameWidth:uint, frameHeight:uint)
 		{
@@ -68,6 +68,19 @@
 			_duration = duration;
 			_durationRange = durationRange;
 			_ease = ease;
+			return this;
+		}
+		
+		/**
+		 * Sets the gravity range of this particle type.
+		 * @param	gravity			Gravity amount to affect to the particle y velocity.
+		 * @param	gravityRange	Random amount to add to the particle's gravity.
+		 * @return	This ParticleType object.
+		 */
+		public function setGravity(gravity:Number = 0, gravityRange:Number = 0):ParticleType
+		{
+			_gravity = gravity;
+			_gravityRange = gravityRange;
 			return this;
 		}
 		
@@ -135,6 +148,10 @@
 		/** @private */ internal var _duration:Number;
 		/** @private */ internal var _durationRange:Number;
 		/** @private */ internal var _ease:Function;
+		
+		// Gravity information.
+		/** @private */ internal var _gravity:Number = 0;
+		/** @private */ internal var _gravityRange:Number = 0;
 		
 		// Alpha information.
 		/** @private */ internal var _alpha:Number = 1;

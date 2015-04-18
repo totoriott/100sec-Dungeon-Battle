@@ -21,7 +21,7 @@
 		public const ONESHOT:uint = 2;
 		
 		/**
-		 * If the Tweener should update.
+		 * If this object should update.
 		 */
 		public var active:Boolean = true;
 		
@@ -101,15 +101,17 @@
 		 */
 		public function updateTweens():void
 		{
-			var t:Tween = _tween;
+			var t:Tween = _tween,
+				n:Tween;
 			while (t)
 			{
+				n = t._next;
 				if (t.active)
 				{
 					t.update();
 					if (t._finish) t.finish();
 				}
-				t = t._next;
+				t = n;
 			}
 		}
 		

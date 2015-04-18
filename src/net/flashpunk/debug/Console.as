@@ -5,17 +5,18 @@ package net.flashpunk.debug
 	import flash.display.BlendMode;
 	import flash.display.Graphics;
 	import flash.display.Sprite;
-	import flash.display.Stage;
 	import flash.geom.ColorTransform;
 	import flash.geom.Rectangle;
+	import flash.system.System;
 	import flash.text.TextField;
 	import flash.text.TextFormat;
+
 	import net.flashpunk.Entity;
 	import net.flashpunk.FP;
-	import net.flashpunk.utils.Draw;
+	import net.flashpunk.graphics.Text;
 	import net.flashpunk.utils.Input;
 	import net.flashpunk.utils.Key;
-	
+
 	/**
 	 * FlashPunk debug console; can use to log information or pause the game and view/move Entities and step the frame.
 	 */
@@ -36,34 +37,37 @@ package net.flashpunk.debug
 		
 		/**
 		 * Logs data to the console.
-		 * @param	...data		The data parameters to log, can be variables, objects, etc. Parameters will be separated by a space (" ").
+		 * @param	data The data parameters to log, can be variables, objects, etc. Parameters will be separated by a space (" ").
 		 */
 		public function log(...data):void
 		{
-			var s:String;
-			if (data.length > 1)
+			var s:String = "";
+			
+			// Iterate through data to build a string.
+			for (var i:uint = 0; i < data.length; i++)
 			{
-				s = "";
-				var i:int = 0;
-				while (i < data.length)
-				{
-					if (i > 0) s += " ";
-					s += data[i ++].toString();
-				}
+				if (i > 0) s += " ";
+				s += (data[i] != null) ? data[i].toString() : "null";
 			}
-			else s = data[0].toString();
+			
+			// Replace newlines with multiple log statements.
 			if (s.indexOf("\n") >= 0)
 			{
 				var a:Array = s.split("\n");
 				for each (s in a) LOG.push(s);
 			}
-			else LOG.push(s);
+			else
+			{
+				LOG.push(s);
+			}
+			
+			// If the log is running, update it.
 			if (_enabled && _sprite.visible) updateLog();
 		}
 		
 		/**
 		 * Adds properties to watch in the console's debug panel.
-		 * @param	...properties		The properties (strings) to watch.
+		 * @param	properties		The properties (strings) to watch.
 		 */
 		public function watch(...properties):void
 		{
@@ -137,7 +141,7 @@ package net.flashpunk.debug
 			// The FPS and frame timing panel.
 			_fpsRead.graphics.clear();
 			_fpsRead.graphics.beginFill(0, .75);
-			_fpsRead.graphics.drawRoundRectComplex(0, 0, big ? 200 : 100, 20, 0, 0, 0, 20);
+			_fpsRead.graphics.drawRoundRectComplex(0, 0, big ? 320 : 160, 20, 0, 0, 0, 20);
 			
 			// The frame timing text.
 			if (big) _sprite.addChild(_fpsInfo);
@@ -151,6 +155,15 @@ package net.flashpunk.debug
 			_fpsInfoText0.height = _fpsInfoText1.height = 20;
 			_fpsInfo.x = 75;
 			_fpsInfoText1.x = 60;
+			
+			// The memory usage
+			_fpsRead.addChild(_memReadText);
+			_memReadText.defaultTextFormat = format(16);
+			_memReadText.embedFonts = true;
+			_memReadText.width = 110;
+			_memReadText.height = 20;
+			_memReadText.x = _fpsInfo.x + _fpsInfo.width + 5;
+			_memReadText.y = 1;
 			
 			// The output log text.
 			_sprite.addChild(_logRead);
@@ -171,7 +184,8 @@ package net.flashpunk.debug
 			_logBar = new Rectangle(8, 24, 16, _logHeight - 8);
 			_logBarGlobal = _logBar.clone();
 			_logBarGlobal.y += 40;
-			_logLines = _logHeight / (big ? 16.5 : 8.5);
+			if (big) _logLines = _logHeight / 16.5;
+			else _logLines = _logHeight / 8.5;
 			
 			// The debug text.
 			_sprite.addChild(_debRead);
@@ -206,6 +220,9 @@ package net.flashpunk.debug
 			_butRead.graphics.clear();
 			_butRead.graphics.beginFill(0, .75);
 			_butRead.graphics.drawRoundRectComplex(-20, 0, 100, 20, 0, 0, 20, 20);
+			
+			// Default the display to debug view
+			debug = true;
 			
 			// Set the state to unpaused.
 			paused = false;
@@ -396,7 +413,7 @@ package net.flashpunk.debug
 			if (Input.mouseReleased) _dragging = false;
 		}
 		
-		/** @private Move the selected Entitites by the amount. */
+		/** @private Move the selected Entities by the amount. */
 		private function moveSelected(xDelta:int, yDelta:int):void
 		{
 			for each (var e:Entity in SELECT_LIST)
@@ -476,7 +493,7 @@ package net.flashpunk.debug
 			}
 		}
 		
-		/** @private Selects the Entitites in the rectangle. */
+		/** @private Selects the Entities in the rectangle. */
 		private function selectEntities(rect:Rectangle):void
 		{
 			if (rect.width < 0) rect.x -= (rect.width = -rect.width);
@@ -491,7 +508,7 @@ package net.flashpunk.debug
 				
 			if (Input.check(Key.CONTROL))
 			{
-				// Append selected Entitites with new selections.
+				// Append selected Entities with new selections.
 				for each (e in SCREEN_LIST)
 				{
 					if (SELECT_LIST.indexOf(e) < 0)
@@ -593,6 +610,7 @@ package net.flashpunk.debug
 						{
 							g.lineStyle(1, 0xFF0000);
 							g.drawRect((e.x - e.originX - FP.camera.x) * sx, (e.y - e.originY - FP.camera.y) * sy, e.width * sx, e.height * sy);
+							if (e.mask) e.mask.renderDebug(g);
 						}
 						g.lineStyle(1, 0x00FF00);
 						g.drawRect((e.x - FP.camera.x) * sx - 3, (e.y - FP.camera.y) * sy - 3, 6, 6);
@@ -604,6 +622,7 @@ package net.flashpunk.debug
 						{
 							g.lineStyle(1, 0xFFFFFF);
 							g.drawRect((e.x - e.originX - FP.camera.x) * sx, (e.y - e.originY - FP.camera.y) * sy, e.width * sx, e.height * sy);
+							if (e.mask) e.mask.renderDebug(g);
 						}
 						g.lineStyle(1, 0xFFFFFF);
 						g.drawRect((e.x - FP.camera.x) * sx - 3, (e.y - FP.camera.y) * sy - 3, 6, 6);
@@ -634,17 +653,23 @@ package net.flashpunk.debug
 				{
 					// Draw the log scrollbar handle.
 					_logRead.graphics.beginFill(0xFFFFFF, 1);
-					var h:uint = FP.clamp(_logBar.height * (_logLines / LOG.length), 12, _logBar.height - 4),
-						y:uint = _logBar.y + 2 + (_logBar.height - 16) * _logScroll;
+					var y:uint = _logBar.y + 2 + (_logBar.height - 16) * _logScroll;
 					_logRead.graphics.drawRoundRectComplex(_logBar.x + 2, y, 12, 12, 6, 6, 6, 6);
 				}
 				
 				// Display the log text lines.
 				if (LOG.length)
 				{
-					var i:int = LOG.length > _logLines ? Math.round((LOG.length - _logLines) * _logScroll) : 0,
-						n:int = i + Math.min(_logLines, LOG.length),
+					var i:int = 0,
+						n:int = 0,
 						s:String = "";
+					
+					if (LOG.length > _logLines) {
+						i = Math.round((LOG.length - _logLines) * _logScroll);
+					}
+					
+					n = i + Math.min(_logLines, LOG.length);
+						
 					while (i < n) s += LOG[i ++] + "\n";
 					_logReadText1.text = s;
 				}
@@ -659,6 +684,7 @@ package net.flashpunk.debug
 				_fpsReadText.selectable = true;
 				_fpsInfoText0.selectable = true;
 				_fpsInfoText1.selectable = true;
+				_memReadText.selectable = true;
 				_entReadText.selectable = true;
 				_debReadText1.selectable = true;
 			}
@@ -682,6 +708,7 @@ package net.flashpunk.debug
 				_fpsReadText.selectable = false;
 				_fpsInfoText0.selectable = false;
 				_fpsInfoText1.selectable = false;
+				_memReadText.selectable = false;
 				_entReadText.selectable = false;
 				_debReadText0.selectable = false;
 				_debReadText1.selectable = false;
@@ -698,6 +725,7 @@ package net.flashpunk.debug
 			_fpsInfoText1.text =
 				"Game: " + String(FP._gameTime) + "ms\n" + 
 				"Flash: " + String(FP._flashTime) + "ms";
+			_memReadText.text = "MEM: " + Number(System.totalMemory/1024/1024).toFixed(2) + "MB";
 		}
 		
 		/** @private Update the debug panel text. */
@@ -722,7 +750,7 @@ package net.flashpunk.debug
 					s += "\n\n- " + String(e) + " -\n";
 					for each (var i:String in WATCH_LIST)
 					{
-						if (e.hasOwnProperty(i)) s += "\n" + i + ": " + e[i].toString();
+						if (e.hasOwnProperty(i)) s += "\n" + i + ": " + e[i];
 					}
 				}
 			}
@@ -812,7 +840,7 @@ package net.flashpunk.debug
 		
 		// Console display objects.
 		/** @private */ private var _sprite:Sprite = new Sprite;
-		/** @private */ private var _format:TextFormat = new TextFormat("console");
+		/** @private */ private var _format:TextFormat = new TextFormat("default");
 		/** @private */ private var _back:Bitmap = new Bitmap;
 		
 		// FPS panel information.
@@ -821,6 +849,7 @@ package net.flashpunk.debug
 		/** @private */ private var _fpsInfo:Sprite = new Sprite;
 		/** @private */ private var _fpsInfoText0:TextField = new TextField;
 		/** @private */ private var _fpsInfoText1:TextField = new TextField;
+		/** @private */ private var _memReadText:TextField = new TextField;
 		
 		// Output panel information.
 		/** @private */ private var _logRead:Sprite = new Sprite;
@@ -839,8 +868,7 @@ package net.flashpunk.debug
 		/** @private */ private var _debRead:Sprite = new Sprite;
 		/** @private */ private var _debReadText0:TextField = new TextField;
 		/** @private */ private var _debReadText1:TextField = new TextField;
-		/** @private */ private var _debWidth:uint;
-		
+
 		// Button panel information
 		/** @private */ private var _butRead:Sprite = new Sprite;
 		/** @private */ private var _butDebug:Bitmap;
@@ -867,12 +895,14 @@ package net.flashpunk.debug
 		/** @private */ private const WATCH_LIST:Vector.<String> = Vector.<String>(["x", "y"]);
 		
 		// Embedded assets.
-		[Embed(source = '../graphics/04B_03__.TTF', embedAsCFF="false", fontFamily = 'console')] private const FONT_SMALL:Class;
 		[Embed(source = 'console_logo.png')] private const CONSOLE_LOGO:Class;
 		[Embed(source = 'console_debug.png')] private const CONSOLE_DEBUG:Class;
 		[Embed(source = 'console_output.png')] private const CONSOLE_OUTPUT:Class;
 		[Embed(source = 'console_play.png')] private const CONSOLE_PLAY:Class;
 		[Embed(source = 'console_pause.png')] private const CONSOLE_PAUSE:Class;
 		[Embed(source = 'console_step.png')] private const CONSOLE_STEP:Class;
+		
+		// Reference the Text class so we can access its embedded font
+		private static var textRef:Text;
 	}
 }

@@ -36,6 +36,7 @@
 			_start = _object[property];
 			_range = to - _start;
 			_target = duration;
+			_ease = ease;
 			start();
 		}
 		
@@ -43,6 +44,7 @@
 		override public function update():void 
 		{
 			super.update();
+			if (delay > 0) return;
 			_object[_property] = _start + _range * _t;
 		}
 		

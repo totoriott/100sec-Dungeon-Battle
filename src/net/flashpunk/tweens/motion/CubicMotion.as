@@ -1,8 +1,5 @@
 ﻿package net.flashpunk.tweens.motion 
 {
-	import flash.geom.Point;
-	import net.flashpunk.utils.Ease;
-	
 	/**
 	 * Determines motion along a cubic curve.
 	 */
@@ -50,6 +47,7 @@
 		override public function update():void 
 		{
 			super.update();
+			if (delay > 0) return;
 			x = _t * _t * _t * (_toX + 3 * (_aX - _bX) - _fromX) + 3 * _t * _t * (_fromX - 2 * _aX + _bX) + 3 * _t * (_aX - _fromX) + _fromX;
 			y = _t * _t * _t * (_toY + 3 * (_aY - _bY) - _fromY) + 3 * _t * _t * (_fromY - 2 * _aY + _bY) + 3 * _t * (_aY - _fromY) + _fromY;
 		}
@@ -63,7 +61,5 @@
 		/** @private */ private var _aY:Number = 0;
 		/** @private */ private var _bX:Number = 0;
 		/** @private */ private var _bY:Number = 0;
-		/** @private */ private var _ttt:Number;
-		/** @private */ private var _tt:Number;
 	}
 }

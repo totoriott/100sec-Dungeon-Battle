@@ -92,17 +92,22 @@
 			else if (parent) update();
 		}
 		
-		/** @private Updates the parent's bounds for this mask. */
-		override protected function update():void 
+		/** @public Updates the parent's bounds for this mask. */
+		override public function update():void 
 		{
-			// update entity bounds
-			parent.originX = -_x;
-			parent.originY = -_y;
-			parent.width = _width;
-			parent.height = _height;
-			
-			// update parent list
-			if (list) list.update();
+			if (list)
+			{
+				// update parent list
+				list.update();
+			}
+			else if (parent)
+			{
+				// update entity bounds
+				parent.originX = -_x;
+				parent.originY = -_y;
+				parent.width = _width;
+				parent.height = _height;
+			}
 		}
 		
 		// Hitbox information.

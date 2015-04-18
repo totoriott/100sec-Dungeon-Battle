@@ -1,17 +1,16 @@
 ﻿package net.flashpunk.utils 
 {
-	import flash.display.BitmapData;
-	import flash.display.Graphics;
-	import flash.display.LineScaleMode;
+	import flash.display.*;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import net.flashpunk.Entity;
 	import net.flashpunk.FP;
 	import net.flashpunk.Graphic;
+	import net.flashpunk.graphics.Text;
 	
 	/**
-	 * Static class with access to miscellanious drawing functions.
+	 * Static class with access to miscellaneous drawing functions.
 	 * These functions are not meant to replace Graphic components
 	 * for Entities, but rather to help with testing and debugging.
 	 */
@@ -19,7 +18,8 @@
 	{
 		/**
 		 * The blending mode used by Draw functions. This will not
-		 * apply to Draw.line(), but will apply to Draw.linePlus().
+		 * apply to Draw.line() or Draw.circle(), but will apply
+		 * to Draw.linePlus() and Draw.circlePlus().
 		 */
 		public static var blend:String;
 		
@@ -48,15 +48,16 @@
 		
 		/**
 		 * Draws a pixelated, non-antialiased line.
-		 * @param	x1		Starting x position.
-		 * @param	y1		Starting y position.
-		 * @param	x2		Ending x position.
-		 * @param	y2		Ending y position.
-		 * @param	color	Color of the line.
+		 * @param	x1				Starting x position.
+		 * @param	y1				Starting y position.
+		 * @param	x2				Ending x position.
+		 * @param	y2				Ending y position.
+		 * @param	color			Color of the line.
+		 * @param	overwriteAlpha	Alpha value written to these pixels: does NOT do blending. If you want to draw a semi-transparent line over some other content, you will have to either: A) use Draw.linePlus() or B) if non-antialiasing is important, render with Draw.line() to an intermediate buffer with transparency and then render that intermediate buffer.
 		 */
-		public static function line(x1:int, y1:int, x2:int, y2:int, color:uint = 0xFFFFFF):void
+		public static function line(x1:int, y1:int, x2:int, y2:int, color:uint = 0xFFFFFF, overwriteAlpha:Number = 1.0):void
 		{
-			if (color < 0xFF000000) color = 0xFF000000 | color;
+			color = (uint(overwriteAlpha * 0xFF) << 24) | (color & 0xFFFFFF);
 			
 			// get the drawing positions
 			x1 -= _camera.x;
@@ -154,7 +155,7 @@
 		 * @param	alpha	Alpha of the line.
 		 * @param	thick	The thickness of the line.
 		 */
-		public static function linePlus(x1:int, y1:int, x2:int, y2:int, color:uint = 0xFF000000, alpha:Number = 1, thick:Number = 1):void
+		public static function linePlus(x1:Number, y1:Number, x2:Number, y2:Number, color:uint = 0xFF000000, alpha:Number = 1, thick:Number = 1):void
 		{
 			_graphics.clear();
 			_graphics.lineStyle(thick, color, alpha, false, LineScaleMode.NONE);
@@ -171,23 +172,55 @@
 		 * @param	height		Height of the rectangle.
 		 * @param	color		Color of the rectangle.
 		 * @param	alpha		Alpha of the rectangle.
+		 * @param	overwrite	If the color/alpha provided should replace the existing data rather than blend.
 		 */
-		public static function rect(x:int, y:int, width:uint, height:uint, color:uint = 0xFFFFFF, alpha:Number = 1):void
+		public static function rect(x:Number, y:Number, width:Number, height:Number, color:uint = 0xFFFFFF, alpha:Number = 1, overwrite:Boolean = false):void
 		{
-			if (alpha >= 1 && !blend)
-			{
-				if (color < 0xFF000000) color = 0xFF000000 | color;
-				_rect.x = x - _camera.x;
-				_rect.y = y - _camera.y;
-				_rect.width = width;
-				_rect.height = height;
-				_target.fillRect(_rect, color);
+			if (! overwrite && (alpha < 1 || blend)) {
+				_graphics.clear();
+				_graphics.beginFill(color & 0xFFFFFF, alpha);
+				_graphics.drawRect(x - _camera.x, y - _camera.y, width, height);
+				_target.draw(FP.sprite, null, null, blend);
 				return;
 			}
-			if (color >= 0xFF000000) color = 0xFFFFFF & color;
+			
+			color = (uint(alpha * 0xFF) << 24) | (color & 0xFFFFFF);
+			_rect.x = x - _camera.x;
+			_rect.y = y - _camera.y;
+			_rect.width = width;
+			_rect.height = height;
+			_target.fillRect(_rect, color);
+		}
+		
+		/**
+		 * Draws a rectangle.
+		 * @param	x			X position of the rectangle.
+		 * @param	y			Y position of the rectangle.
+		 * @param	width		Width of the rectangle.
+		 * @param	height		Height of the rectangle.
+		 * @param	color		Color of the rectangle.
+		 * @param	alpha		Alpha of the rectangle.
+		 * @param	fill		If the rectangle should be filled with the color (true) or just an outline (false).
+		 * @param	thick		How thick the outline should be (only applicable when fill = false).
+		 * @param	radius		Round rectangle corners by this amount.
+		 */
+		public static function rectPlus(x:Number, y:Number, width:Number, height:Number, color:uint = 0xFFFFFF, alpha:Number = 1, fill:Boolean = true, thick:Number = 1, radius:Number = 0):void
+		{
+			if (color > 0xFFFFFF) color = 0xFFFFFF & color;
 			_graphics.clear();
-			_graphics.beginFill(color, alpha);
-			_graphics.drawRect(x - _camera.x, y - _camera.y, width, height);
+			
+			if (fill) {
+				_graphics.beginFill(color, alpha);
+			} else {
+				_graphics.lineStyle(thick, color, alpha, false, LineScaleMode.NORMAL, null, JointStyle.MITER);
+			}
+			
+			if (radius <= 0) {
+				_graphics.drawRect(x - _camera.x, y - _camera.y, width, height);
+			} else {
+				_graphics.drawRoundRect(x - _camera.x, y - _camera.y, width, height, radius);
+			}
+			
 			_target.draw(FP.sprite, null, null, blend);
 		}
 		
@@ -244,7 +277,7 @@
 		 * @param	fill		If the circle should be filled with the color (true) or just an outline (false).
 		 * @param	thick		How thick the outline should be (only applicable when fill = false).
 		 */
-		public static function circlePlus(x:int, y:int, radius:Number, color:uint = 0xFFFFFF, alpha:Number = 1, fill:Boolean = true, thick:int = 1):void
+		public static function circlePlus(x:Number, y:Number, radius:Number, color:uint = 0xFFFFFF, alpha:Number = 1, fill:Boolean = true, thick:Number = 1):void
 		{
 			_graphics.clear();
 			if (fill)
@@ -259,6 +292,38 @@
 				_graphics.drawCircle(x - _camera.x, y - _camera.y, radius);
 			}
 			_target.draw(FP.sprite, null, null, blend);
+		}
+
+		/**
+		 * Draws an ellipse to the screen.
+		 * @param	x		X position of the ellipse's center.
+		 * @param	y		Y position of the ellipse's center.
+		 * @param	width		Width of the ellipse.
+		 * @param	height		Height of the ellipse.
+		 * @param	color		Color of the ellipse.
+		 * @param	alpha		Alpha of the ellipse.
+		 * @param	fill		If the ellipse should be filled with the color (true) or just an outline (false).
+		 * @param	thick		How thick the outline should be (only applicable when fill = false).
+		 * @param	angle		What angle (in degrees) the ellipse should be rotated.
+		 */
+		public static function ellipse(x:Number, y:Number, width:Number, height:Number, color:uint = 0xFFFFFF, alpha:Number = 1, fill:Boolean = true, thick:Number = 1, angle:Number = 0):void
+		{
+			_graphics.clear();
+			if (fill)
+			{
+				_graphics.beginFill(color & 0xFFFFFF, alpha);
+				_graphics.drawEllipse(-width / 2, -height / 2, width, height);
+				_graphics.endFill();
+			}
+			else
+			{
+				_graphics.lineStyle(thick, color & 0xFFFFFF, alpha);
+				_graphics.drawEllipse(-width / 2, -height / 2, width, height);
+			}
+			var m:Matrix = new Matrix();
+			m.rotate(angle * FP.RAD);
+			m.translate(x - _camera.x, y - _camera.y);
+			_target.draw(FP.sprite, m, null, blend);
 		}
 		
 		/**
@@ -300,7 +365,7 @@
 				_target.fillRect(_rect, color);
 				return;
 			}
-			if (color >= 0xFF000000) color = 0xFFFFFF & color;
+			if (color > 0xFFFFFF) color = 0xFFFFFF & color;
 			_graphics.clear();
 			_graphics.beginFill(color, alpha);
 			_graphics.drawRect(e.x - e.originX - _camera.x, e.y - e.originY - _camera.y, e.width, e.height);
@@ -318,10 +383,10 @@
 		 * @param	color	Color of the curve
 		 * @param	alpha	Alpha transparency.
 		 */
-		public static function curve(x1:int, y1:int, x2:int, y2:int, x3:int, y3:int, thick:Number = 1, color:uint = 0, alpha:Number = 1):void
+		public static function curve(x1:Number, y1:Number, x2:Number, y2:Number, x3:Number, y3:Number, color:uint = 0, alpha:Number = 1, thick:Number = 1):void
 		{
 			_graphics.clear();
-			_graphics.lineStyle(thick, color, alpha);
+			_graphics.lineStyle(thick, color & 0xFFFFFF, alpha);
 			_graphics.moveTo(x1 - _camera.x, y1 - _camera.y);
 			_graphics.curveTo(x2 - _camera.x, y2 - _camera.y, x3 - _camera.x, y3 - _camera.y);
 			_target.draw(FP.sprite, null, null, blend);
@@ -343,8 +408,8 @@
 					FP.point.y = y;
 				}
 				else FP.point.x = FP.point.y = 0;
-				FP.point2.x = FP.camera.x;
-				FP.point2.y = FP.camera.y;
+				FP.point2.x = _camera.x;
+				FP.point2.y = _camera.y;
 				g.render(_target, FP.point, FP.point2);
 			}
 		}
@@ -364,12 +429,25 @@
 				else graphic(e.graphic, x, y);
 			}
 		}
+
+		/**
+		 * Draws text.
+		 * @param	text		The text to render.
+		 * @param	x		X position.
+		 * @param	y		Y position.
+		 * @param	options		Options (see Text constructor).
+		 */
+		public static function text (text:String, x:Number = 0, y:Number = 0, options:Object = null):void
+		{
+			var textGfx:Text = new Text(text, x, y, options);
+
+			textGfx.render(_target, FP.zero, _camera);
+		}
 		
 		// Drawing information.
 		/** @private */ private static var _target:BitmapData;
 		/** @private */ private static var _camera:Point;
 		/** @private */ private static var _graphics:Graphics = FP.sprite.graphics;
 		/** @private */ private static var _rect:Rectangle = FP.rect;
-		/** @private */ private static var _matrix:Matrix = new Matrix;
 	}
 }

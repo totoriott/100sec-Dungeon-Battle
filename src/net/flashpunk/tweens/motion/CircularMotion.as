@@ -1,9 +1,7 @@
 ﻿package net.flashpunk.tweens.motion 
 {
-	import flash.geom.Point;
 	import net.flashpunk.FP;
-	import net.flashpunk.utils.Ease;
-	
+
 	/**
 	 * Determines a circular motion.
 	 */
@@ -67,6 +65,7 @@
 		override public function update():void 
 		{
 			super.update();
+			if (delay > 0) return;
 			_angle = _angleStart + _angleFinish * _t;
 			x = _centerX + Math.cos(_angle) * _radius;
 			y = _centerY + Math.sin(_angle) * _radius;

@@ -82,6 +82,7 @@
 		override public function update():void 
 		{
 			super.update();
+			if (delay > 0) return;
 			if (_index < _curve.length - 1)
 			{
 				while (_t > _curveT[_index + 1]) _index ++;
@@ -152,7 +153,7 @@
 		 */
 		public function get pointCount():Number { return _points.length; }
 		
-		/** @private Calculates the lenght of the curve. */
+		/** @private Calculates the length of the curve. */
 		private function curveLength(start:Point, control:Point, finish:Point):Number
 		{
 			var a:Point = FP.point,

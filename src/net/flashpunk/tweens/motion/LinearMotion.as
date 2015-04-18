@@ -1,7 +1,5 @@
 ﻿package net.flashpunk.tweens.motion 
 {
-	import flash.geom.Point;
-	
 	/**
 	 * Determines motion along a line, from one point to another.
 	 */
@@ -63,6 +61,7 @@
 		override public function update():void 
 		{
 			super.update();
+			if (delay > 0) return;
 			x = _fromX + _moveX * _t;
 			y = _fromY + _moveY * _t;
 		}
