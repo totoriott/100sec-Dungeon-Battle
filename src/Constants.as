@@ -28,6 +28,7 @@ package
 		// Graphics things
 		public static var FRAMES_BETWEEN_SQUARES_MOVED:int = 5;
 		public static var PLAYER_IMAGECOLORS:Array = [0xFF8888, 0x8888FF, 0xFFFF88, 0x88FF88];
+		public static var PLAYER_IMAGECOLORS_STRONG:Array = [0xFF4444, 0x4444FF, 0xFFFF44, 0x44FF44];
 		
 		public static var PLAYERHUD_TYPE_CARDS:int = 0;
 		public static var PLAYERHUD_TYPE_ITEMS:int = 1;
@@ -278,15 +279,15 @@ package
 				new Image(SRC_OVERLAY_DICE4), new Image(SRC_OVERLAY_DICE5), new Image(SRC_OVERLAY_DICE6)];
 		}
 		
-		public static function graphicsAnimationPercentFromTiming(time:int, fadeInStart:int, fadeOutStart:int, duration:int):Number {
+		public static function graphicsAnimationPercentFromTiming(time:int, fadeInStart:int, inDuration:int, fadeOutStart:int, outDuration:int):Number {
 			var alpha:Number = 0;
-			if (time >= fadeInStart && time - fadeInStart < duration) {
-				alpha = Math.min(1, (time - fadeInStart) / duration);
-			} else if (time >= fadeInStart + duration && time < fadeOutStart) {
+			if (time >= fadeInStart && time - fadeInStart < inDuration) {
+				alpha = Math.min(1, (time - fadeInStart) / inDuration);
+			} else if (time >= fadeInStart + inDuration && time < fadeOutStart) {
 				alpha = 1; 
 			}
 			else if (time >= fadeOutStart) {
-				alpha = Math.max(0, (fadeOutStart + duration - time) / duration);
+				alpha = Math.max(0, (fadeOutStart + outDuration - time) / outDuration);
 			}
 			return alpha;
 		}
