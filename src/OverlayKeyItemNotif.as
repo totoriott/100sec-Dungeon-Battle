@@ -12,30 +12,28 @@ package
 	 * ...
 	 * @author ...
 	 */
-	public class OverlayGetItem extends GraphicOverlay 
+	public class OverlayKeyItemNotif extends GraphicOverlay 
 	{
 		private var timer:int = 0;
 		
-		private var isKeyItem:Boolean;
 		private var item:BoardItem;
 		
-		private var getItemText:Text;
-		private var keyItemText:Text;
+		private var notifText1:Text;
+		private var notifText2:Text;
 		
-		public function OverlayGetItem(player:Player, mItem:int, keyItem:Boolean) 
+		public function OverlayKeyItemNotif(mItem:int) 
 		{
 			timer = 0;
 			
 			item = BoardItem.BoardItemFromId(mItem);
-			isKeyItem = keyItem;
 			
-			getItemText = new Text(player.getName() + " got an item!", 0, 0, { "size": 32 });
-			getItemText.font = "Segoe";
-			getItemText.color = 0xFFFFFF;
+			notifText1 = new Text("Here's this round's key item!", 0, 0, { "size": 32 });
+			notifText1.font = "Segoe";
+			notifText1.color = 0xFFFFFF;
 			
-			keyItemText = new Text("It's the key item! Get to the exit!", 0, 0, { "size": 32 });
-			keyItemText.font = "Segoe";
-			keyItemText.color = 0xFFFFFF;
+			notifText2 = new Text("Find it and get to the exit to win!", 0, 0, { "size": 32 });
+			notifText2.font = "Segoe";
+			notifText2.color = 0xFFFFFF;
 		}
 		
 		override public function render(x:int, y:int):void
@@ -47,19 +45,17 @@ package
 			Draw.rect(0, centerY - heightOfOverlay / 2, Constants.GAME_WIDTH, heightOfOverlay, 0x444444, 0.80);
 				
 			// these are hardcoded sorry
-			getItemText.alpha = Constants.graphicsAnimationPercentFromTiming(timer, 5, 5, 115, 5);
-			Draw.graphic(getItemText, centerX - 112, centerY - 66);
+			notifText1.alpha = Constants.graphicsAnimationPercentFromTiming(timer, 5, 5, 115, 5);
+			Draw.graphic(notifText1, centerX - 112, centerY - 66);
 			
 			var itemAlpha:Number = Constants.graphicsAnimationPercentFromTiming(timer, 25, 15, 115, 5);
 			var itemImage:Image = item.image;
 			itemImage.alpha = itemAlpha;
 			itemImage.scale = 1;
 			Draw.graphic(itemImage, centerX / 2 - itemImage.width / 2, centerY - itemImage.height / 2);
-
-			if (isKeyItem) {
-				keyItemText.alpha = Constants.graphicsAnimationPercentFromTiming(timer, 45, 5, 115, 5);
-				Draw.graphic(keyItemText, centerX - 112, centerY - 26);
-			}
+			
+			notifText2.alpha = Constants.graphicsAnimationPercentFromTiming(timer, 45, 10, 115, 5);
+			Draw.graphic(notifText2, centerX - 112, centerY - 26);
 		}
 			
 		override public function update(inputArray:Array):void 

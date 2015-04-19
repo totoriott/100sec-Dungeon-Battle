@@ -62,6 +62,8 @@ package
 			
 			overlaysQueue = new Vector.<GraphicOverlay>();
 			
+			queueOverlay(new OverlayKeyItemNotif(keyItemId));
+			
 			// TODO - decide first player
 			// TODO - you turned off flash debugger in tools to increase framerate. LMK if this is weird
 		}
