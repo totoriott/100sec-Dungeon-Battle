@@ -1065,6 +1065,8 @@ package
 					// TODO: check if it's key treasure and do things
 					curPlayer.giveTreasureWithId(treasureId);					
 					board[playerPos.row][playerPos.col].changeTo(Constants.BOARD_EMPTY, 0); // empty out the space
+					
+					queueOverlay(new OverlayGetItem(curPlayer, treasureId, treasureId == keyItemId));
 					break;
 					
 				case Constants.BOARD_FLAG:
