@@ -1071,6 +1071,8 @@ package
 					
 				case Constants.BOARD_FLAG:
 					// award flag points to player
+					// TODO: some flags heal you or give extra turn???
+					var flagType:int = Constants.FLAG_TYPE_POINTS;
 					var flagPoints:int = Constants.FLAG_BASE_POINTS;
 					
 					var flagValue:int = Math.floor(FP.rand(6));
@@ -1083,6 +1085,8 @@ package
 					
 					flagPoints *= Constants.FLAG_MULTIPLIERS[flagValue];
 					curPlayer.awardFlagPoints(flagPoints);
+					
+					queueOverlay(new OverlayGetFlag(curPlayer, flagType, flagValue));
 					
 					var newFlag:BoardPosition = getEmptySpaceOnBoard();
 					board[playerPos.row][playerPos.col].changeTo(Constants.BOARD_EMPTY, 0); // empty out the old space

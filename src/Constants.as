@@ -266,6 +266,10 @@ package
 			COMBAT_DEFENSE_OPTIONIMAGES = [new Image(SRC_COMBAT_COUNTER), new Image(SRC_COMBAT_GUARD), new Image(SRC_COMBAT_RUN), new Image(SRC_COMBAT_SURRENDER)];
 		}
 		
+		// Flag constants
+		public static var FLAG_TYPE_POINTS:int = 0;
+		// TODO: other flag constants
+		
 		// Overlay images
 		[Embed(source = 'assets/img/overlay/dice_1.png')] private static const SRC_OVERLAY_DICE1:Class;
 		[Embed(source = 'assets/img/overlay/dice_2.png')] private static const SRC_OVERLAY_DICE2:Class;
