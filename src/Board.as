@@ -1058,6 +1058,7 @@ package
 			{
 				case Constants.BOARD_TRAP:
 					curPlayer.sufferFromTrap(space.value);
+					queueOverlay(new OverlayActivateTrap(curPlayer, space.value));
 					
 					board[playerPos.row][playerPos.col].changeTo(Constants.BOARD_EMPTY, 0); // empty out the space
 					break;

@@ -403,7 +403,7 @@ package
 			
 			var nameAndStatusString:String = name;
 			if (isStunned()) {
-				name = "[STUN] " + name;
+				nameAndStatusString = "[STUN] " + name;
 			}
 			
 			headerStr = new Text(name + " Lv." + level.toString());
