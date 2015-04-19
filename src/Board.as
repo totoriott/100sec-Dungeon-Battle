@@ -759,9 +759,13 @@ package
 				switch (playerHudType) {
 					case Constants.PLAYERHUD_TYPE_CARDS:
 						// draw their hand
-						for (j = 0; j < cards.length; j++)
+						var offsetToDrawNoCard:int = (playerTurn == i)? 1 : 0; // draw the Nocard card if you're picking currently
+						for (j = 0 - offsetToDrawNoCard; j < cards.length; j++)
 						{
-							var cardImage:Image = cards[j].image;
+							var cardImage:Image = Constants.IMG_NO_CARD;
+							if (j >= 0) {
+								cardImage = cards[j].image;
+							}
 							cardImage.scale = 0.75; // TODO - hack while i figure card size out
 							cardImage.alpha = 1;
 							
@@ -769,7 +773,7 @@ package
 							if (gameState == Constants.GSTATE_SELECTCARD && i == playerTurn
 								&& j == cardIndex) // if it's the card selected
 									cardY = playerY + 40;
-							Draw.graphic(cardImage, hudX + 36 * j, cardY);
+							Draw.graphic(cardImage, hudX + 36 * (j + offsetToDrawNoCard), cardY);
 						}
 						break;
 						
@@ -854,12 +858,8 @@ package
 			{
 				changeState(Constants.GSTATE_DOROLL);
 			}
-			else if (inputArray[Constants.KEY_FIRE2] == Constants.INPUT_PRESSED) // cancel
+			else if (inputArray[Constants.KEY_FIRE2] == Constants.INPUT_PRESSED || curPlayer.isStunned()) // rest
 			{
-				cardIndex = -1;
-				changeState(Constants.GSTATE_DOROLL);
-			}
-			else if (inputArray[Constants.KEY_FIRE2] == Constants.INPUT_PRESSED || curPlayer.isStunned()) { // TODO: figure out what key to use for resting
 				// TODO: do resting
 			}
 			else if (cards.length > 0) // otherwise if they are still selecting their card
@@ -877,11 +877,11 @@ package
 				
 				cardIndex += cardMoveDirection;
 				while (cardMoveDirection != 0 && cardIndex != originalIndex 
-						&& (cardIndex < 0 || cardIndex >= cards.length || !canUseCardForRoll(curPlayer.getCards()[cardIndex]))) {		
+						&& (cardIndex < -1 || cardIndex >= cards.length || (cardIndex >= 0 && !canUseCardForRoll(curPlayer.getCards()[cardIndex])))) {		
 					cardIndex += cardMoveDirection;
 					if (cardIndex >= cards.length)
-						cardIndex = Math.min(0, originalIndex); 
-					if (cardIndex < Math.min(0, originalIndex))
+						cardIndex = Math.min(-1, originalIndex); 
+					if (cardIndex < Math.min(-1, originalIndex))
 						cardIndex = cards.length - 1;
 				}
 			}
