@@ -11,7 +11,7 @@ package
 		internal var playerNumber:int = -1;
 		
 		internal var level:int = 1;
-		internal var skillPoints:Array = [4, 2, 1, 1];
+		internal var skillPoints:Array = [4, 2, 3, 3];
 		
 		internal var name:String = "Nameless"; // TODO - funny default name
 		internal var hp:int = 10;
@@ -199,6 +199,10 @@ package
 			escapeVal += cardBonus_escape;
 			
 			return escapeVal;
+		}
+		
+		public function getCardBonusEscape():int {
+			return cardBonus_escape;
 		}
 		
 		public function doEscapeRoll():int

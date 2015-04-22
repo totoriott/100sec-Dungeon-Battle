@@ -58,6 +58,7 @@ package
 			
 			var diceAlpha:Number = Constants.graphicsAnimationPercentFromTiming(timer, 5, 10, 115, 5);
 			var dieImage:Image = Constants.IMG_OVERLAY_DICE[dice[0] - 1]; // we're going to assume you only rolled one die
+			dieImage.scale = 1;
 			dieImage.alpha = diceAlpha;
 			Draw.graphic(dieImage, centerX / 2 - dieImage.width / 2, centerY - dieImage.height / 2);
 			
