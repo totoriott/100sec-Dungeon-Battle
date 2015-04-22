@@ -1524,6 +1524,7 @@ package
 				// defense teleports away
 				defensePlayer.moveToSpace(getEmptySpaceOnBoard()); 
 				
+				queueOverlay(new OverlaySurrenderItem(defensePlayer, attackPlayer, transferItem.id, transferItem.fromThisBoard && transferItem.id == keyItemId));
 				return; // end combat
 			}
 			
