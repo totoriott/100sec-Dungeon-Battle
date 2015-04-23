@@ -1556,6 +1556,7 @@ package
 			var damage:int = Math.max(0, attackValue - defenseValue);
 			attackPlayer.incrementDamageGiven(damage);
 			trace(damage + " damage dealt.");
+			queueOverlay(new OverlayCombatRoll(defensePlayer, attackPlayer, selectedDefenseOption == Constants.COMBAT_DEFENSE_GUARD, false)); 
 			defensePlayer.changeHp( -1 * damage);
 			
 			// TODO: criticals?
@@ -1564,6 +1565,7 @@ package
 				attackPlayer.incrementEnemiesKOed(1);
 				defensePlayer.respawn();
 				defensePlayer.moveToSpace(getEmptySpaceOnBoard()); 
+				// TODO: steal item??
 				return; // end combat 
 			}
 			
@@ -1578,6 +1580,7 @@ package
 				damage = Math.max(0, attackValue - defenseValue);
 				defensePlayer.incrementDamageGiven(damage);
 				trace(damage + " damage dealt.");
+				queueOverlay(new OverlayCombatRoll(attackPlayer, defensePlayer, false, true)); 
 				attackPlayer.changeHp( -1 * damage);
 				
 				if (attackPlayer.getHp() <= 0) {
@@ -1585,6 +1588,7 @@ package
 					defensePlayer.incrementEnemiesKOed(1);
 					attackPlayer.respawn();
 					attackPlayer.moveToSpace(getEmptySpaceOnBoard()); 
+					// TODO: steal item??
 					return; // end combat 
 				}
 			}

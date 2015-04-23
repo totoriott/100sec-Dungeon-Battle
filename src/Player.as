@@ -205,6 +205,14 @@ package
 			return cardBonus_escape;
 		}
 		
+		public function getCardBonusAttack():int {
+			return cardBonus_attack;
+		}
+		
+		public function getCardBonusDefense():int {
+			return cardBonus_defense;
+		}
+		
 		public function doEscapeRoll():int
 		{
 			lastEscapeRoll = [];
