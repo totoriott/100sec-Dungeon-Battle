@@ -315,6 +315,8 @@ package
 			cardBonus_attack = 0;
 			cardBonus_defense = 0;
 			cardBonus_escape = 0;
+			card_combatActivated = null;
+			card_boardActivated = null;
 			
 			initUX();
 		}
@@ -355,7 +357,11 @@ package
 			return card;
 		}
 		
-		public function activateCardOnCombat(index:int):BoardCard
+		public function getLastCombatCard():BoardCard {
+			return card_combatActivated;
+		}
+		
+		public function activateCardOnCombat(index:int, opponent:Player):BoardCard
 		{
 			var card:BoardCard = hand[index];
 			card_combatActivated = card;
@@ -371,16 +377,28 @@ package
 			if (card.type == Constants.CARD_DEF) {
 				cardBonus_defense = card.value;
 				
-				// TODO: special cards for defense
+				if (card.value == Constants.DEF_A) {
+					cardBonus_defense = 99999; // always perfect defense
+				}
+				
+				if (card.value == Constants.DEF_D) {
+					cardBonus_defense = getDefense(); // double defense
+				}
 			}
 			
 			if (card.type == Constants.CARD_ATK) {
 				cardBonus_attack = card.value;
 				
-				// TODO: special cards for attack
+				if (card.value == Constants.ATK_S) {
+					cardBonus_attack = getAttack(); // double attack
+				}
+				
+				if (card.value == Constants.ATK_C) {
+					cardBonus_attack = opponent.getAttack(); // + opponent's attack
+				}
 			}
 			
-			// TRAP cards should not be usable on board
+			// TRAP cards should not be usable on combat
 			
 			hand.splice(index, 1); // remove the card from the hand	
 			

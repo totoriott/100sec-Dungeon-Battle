@@ -64,22 +64,44 @@ package
 			} else {
 				defenseHeaderText = getText(dPlayer.getName() + " defends!", 32); 
 			}
+			
 			if (isGuard) {
 				dCombatBonusText = getText("+ " +dCombatBonus + " x 2 = " + (dCombatBonus*2) + " defense bonus", 24);
 			} else {
 				dCombatBonusText = getText("+ " +dCombatBonus + " defense bonus", 24);
 			}
 			
-			dCardBonusText = getText("+ " + dCardBonus + " card bonus", 24);
-			dTotalRollText = getText("= " + dTotalRoll + " total defense", 32);
+			if (dCardBonus >= 99999) {
+				dCardBonusText = getText("DEF-A card used", 24);
+				dTotalRollText = getText("= perfect defense", 32);
+			} else {
+				var doubleUsed:Boolean = (dPlayer.getLastCombatCard() != null && dPlayer.getLastCombatCard().type == Constants.CARD_DEF && dPlayer.getLastCombatCard().value == Constants.DEF_D);
+				if (doubleUsed) {
+					dCardBonusText = getText("+ " + dCardBonus + " doubled defense", 24);
+				} else {
+					dCardBonusText = getText("+ " + dCardBonus + " card bonus", 24);
+				}
+				
+				dTotalRollText = getText("= " + dTotalRoll + " total defense", 32);
+			}
 			
 			if (isCounter) {
 				offenseHeaderText = getText(aPlayer.getName() + "'s counterattack!", 32); 
 			} else {
 				offenseHeaderText = getText(aPlayer.getName() + " attacks!", 32); 
 			}
+			
 			aCombatBonusText = getText("+ " + aCombatBonus + " attack bonus", 24);
-			aCardBonusText = getText("+ " + aCardBonus + " card bonus", 24);
+			
+			var aDoubleUsed:Boolean = (aPlayer.getLastCombatCard() != null && aPlayer.getLastCombatCard().type == Constants.CARD_ATK && aPlayer.getLastCombatCard().value == Constants.ATK_S);
+			var aOppUsed:Boolean = (aPlayer.getLastCombatCard() != null && aPlayer.getLastCombatCard().type == Constants.CARD_ATK && aPlayer.getLastCombatCard().value == Constants.ATK_C);
+			if (aDoubleUsed) {
+				aCardBonusText = getText("+ " + aCardBonus + " double attack", 24);
+			} else if (aOppUsed) {
+				aCardBonusText = getText("+ " + aCardBonus + " opponent's strength", 24);
+			} else {
+				aCardBonusText = getText("+ " + aCardBonus + " card bonus", 24);
+			}
 			aTotalRollText = getText("= " + aTotalRoll + " total attack", 32);
 			
 			var attackValue:int = aTotalRoll;

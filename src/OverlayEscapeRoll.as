@@ -58,7 +58,7 @@ package
 			dEscapeBonusText = getText("+ " +dEscapeBonus + " escape bonus", 24);
 			if (dCardBonus >= 99999) { // EXIT card used
 				dCardBonusText = getText("EXIT card used", 24);
-				dTotalRollText = getText("= Perfect escape", 32);
+				dTotalRollText = getText("= perfect escape", 32);
 			} else {
 				dCardBonusText = getText("+ " + dCardBonus + " card bonus", 24);
 				dTotalRollText = getText("= " + dTotalRoll + " total escape", 32);
@@ -67,7 +67,7 @@ package
 			aEscapeBonusText = getText("+ " + aEscapeBonus + " escape bonus", 24);
 			if (aCardBonus >= 99999) { // EXIT card used
 				aCardBonusText = getText("EXIT card used", 24);
-				aTotalRollText = getText("= Perfect escape", 32);
+				aTotalRollText = getText("= perfect escape", 32);
 			} else {
 				aCardBonusText = getText("+ " + aCardBonus + " card bonus", 24);
 				aTotalRollText = getText("= " + aTotalRoll + " total escape", 32);

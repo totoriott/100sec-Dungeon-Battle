@@ -1525,11 +1525,11 @@ package
 			// use the card selected, if one was picked
 			if (selectedAttackCard >= 0)
 			{
-				attackPlayer.activateCardOnCombat(selectedAttackCard);
+				attackPlayer.activateCardOnCombat(selectedAttackCard, defensePlayer);
 			}
 			if (selectedDefenseCard >= 0)
 			{
-				defensePlayer.activateCardOnCombat(selectedDefenseCard);
+				defensePlayer.activateCardOnCombat(selectedDefenseCard, attackPlayer);
 			}
 			
 			if (selectedDefenseOption == Constants.COMBAT_DEFENSE_SURRENDER) {
