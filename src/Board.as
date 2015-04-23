@@ -690,7 +690,7 @@ package
 						}
 						dCardImage.scale = 0.75; // TODO - hack while i figure card size out
 						dCardImage.alpha = defenseCardAlpha;
-						if (j >= 0 && !canUseCardForCombat(dCards[j])) { // dim it if it's not valid for combat
+						if (j >= 0 && !canUseCardForCombat(dCards[j], true)) { // dim it if it's not valid for combat
 							dCardImage.alpha *= 0.33;
 						}
 						
@@ -718,7 +718,7 @@ package
 						}
 						aCardImage.scale = 0.75; // TODO - hack while i figure card size out
 						aCardImage.alpha = attackCardAlpha;
-						if (j >= 0 && !canUseCardForCombat(aCards[j])) { // dim it if it's not valid for combat
+						if (j >= 0 && !canUseCardForCombat(aCards[j], false)) { // dim it if it's not valid for combat
 							aCardImage.alpha *= 0.33;
 						}
 						
@@ -1203,7 +1203,7 @@ package
 				if (selectedDefenseCard < -1) {
 					selectedDefenseCard = defensePlayer.getCards().length - 1;
 				}
-				while (selectedDefenseCard != -1 && !canUseCardForCombat(defensePlayer.getCards()[selectedDefenseCard])) {
+				while (selectedDefenseCard != -1 && !canUseCardForCombat(defensePlayer.getCards()[selectedDefenseCard], true)) {
 					selectedDefenseCard += cardMoveDirection;
 					if (selectedDefenseCard >= defensePlayer.getCards().length) {
 						selectedDefenseCard = -1;
@@ -1243,7 +1243,7 @@ package
 				if (selectedAttackCard < -1) {
 					selectedAttackCard = attackPlayer.getCards().length - 1;
 				}
-				while (selectedAttackCard != -1 && !canUseCardForCombat(attackPlayer.getCards()[selectedAttackCard])) {
+				while (selectedAttackCard != -1 && !canUseCardForCombat(attackPlayer.getCards()[selectedAttackCard], false)) {
 					selectedAttackCard += cardMoveDirection;
 					if (selectedAttackCard >= attackPlayer.getCards().length) {
 						selectedAttackCard = -1;
@@ -1430,7 +1430,11 @@ package
 			return true;
 		}
 		
-		private function canUseCardForCombat(card:BoardCard):Boolean {
+		private function canUseCardForCombat(card:BoardCard, isDefender:Boolean):Boolean {
+			if (isDefender && selectedDefenseOption != Constants.COMBAT_DEFENSE_COUNTER && card.type == Constants.CARD_ATK) {
+				return false; // can only pick attack cards if you are offense or counterattack
+			}
+			
 			if (selectedDefenseOption != Constants.COMBAT_DEFENSE_RUN && card.type == Constants.CARD_MOVE) {
 				return false; // can only pick move cards when you're doing escape
 			}

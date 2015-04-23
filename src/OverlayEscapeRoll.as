@@ -26,7 +26,6 @@ package
 		private var aCardBonus:int;
 		private var aTotalRoll:int;
 		
-		// TODO: what if you play exit card lol
 		private var dEscapeBonusText:Text;
 		private var dCardBonusText:Text;
 		private var dTotalRollText:Text;
@@ -57,13 +56,23 @@ package
 			aTotalRoll = aPlayer.getEscapeRollValue();
 			
 			dEscapeBonusText = getText("+ " +dEscapeBonus + " escape bonus", 24);
-			dCardBonusText = getText("+ " + dCardBonus + " card bonus", 24);
-			dTotalRollText = getText("= " + dTotalRoll + " total escape", 32);
-			
-			aEscapeBonusText = getText("+ " + aEscapeBonus + " escape bonus", 24);
-			aCardBonusText = getText("+ " + aCardBonus + " card bonus", 24);
-			aTotalRollText = getText("= " + aTotalRoll + " total escape", 32);
+			if (dCardBonus >= 99999) { // EXIT card used
+				dCardBonusText = getText("EXIT card used", 24);
+				dTotalRollText = getText("= Perfect escape", 32);
+			} else {
+				dCardBonusText = getText("+ " + dCardBonus + " card bonus", 24);
+				dTotalRollText = getText("= " + dTotalRoll + " total escape", 32);
+			}
 
+			aEscapeBonusText = getText("+ " + aEscapeBonus + " escape bonus", 24);
+			if (aCardBonus >= 99999) { // EXIT card used
+				aCardBonusText = getText("EXIT card used", 24);
+				aTotalRollText = getText("= Perfect escape", 32);
+			} else {
+				aCardBonusText = getText("+ " + aCardBonus + " card bonus", 24);
+				aTotalRollText = getText("= " + aTotalRoll + " total escape", 32);
+			}
+			
 			defenseHeaderText = getText(dPlayer.getName() + " tries to escape!", 32); 
 			offenseHeaderText = getText(aPlayer.getName() + " pursues them!", 32); 
 			
