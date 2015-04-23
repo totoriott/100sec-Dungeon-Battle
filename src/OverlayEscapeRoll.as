@@ -86,20 +86,16 @@ package
 			
 			// draw defense
 			var defenseYrelToCenter:int = -72;
-
-			var dDieImage:Image = Constants.IMG_OVERLAY_DICE[dDice[0] - 1];
 			
 			defenseHeaderText.alpha = fadeInForAndDelayAfter(10, 10);
+			var dDieImage:Image = Constants.IMG_OVERLAY_DICE[dDice[0] - 1];
 			Draw.graphic(defenseHeaderText, centerX / 2 - dDieImage.width / 2 * 3 + 16, centerY + defenseYrelToCenter - 116);
 			
-			var dDiceAlpha:Number =  fadeInForAndDelayAfter(30, 0);
-			dDieImage.alpha = dDiceAlpha;
-			dDieImage.scale = 0.75;
-			Draw.graphic(dDieImage, centerX / 2 - dDieImage.width / 2 * 3 + 32, centerY - dDieImage.height / 2 + defenseYrelToCenter);
-			dDieImage = Constants.IMG_OVERLAY_DICE[dDice[1] - 1];
-			dDieImage.alpha = dDiceAlpha;
-			dDieImage.scale = 0.75;
-			Draw.graphic(dDieImage, centerX / 2 - dDieImage.width / 2 + 32, centerY - dDieImage.height / 2 + defenseYrelToCenter);
+			var dDiceAlpha:Number = fadeInForAndDelayAfter(30, 0);
+			Draw.graphic(Constants.imageWithProperties(Constants.IMG_OVERLAY_DICE[dDice[0] - 1], dDiceAlpha, 0.75), 
+				centerX / 2 - dDieImage.width / 2 * 3 + 32, centerY - dDieImage.height / 2 + defenseYrelToCenter);
+			Draw.graphic(Constants.imageWithProperties(Constants.IMG_OVERLAY_DICE[dDice[1] - 1], dDiceAlpha, 0.75), 
+				centerX / 2 - dDieImage.width / 2 + 32, centerY - dDieImage.height / 2 + defenseYrelToCenter);
 			
 			dEscapeBonusText.alpha = fadeInForAndDelayAfter(15, 0);
 			if (dEscapeBonus > 0) {
@@ -113,23 +109,19 @@ package
 			
 			dTotalRollText.alpha = fadeInForAndDelayAfter(15, 30);
 			Draw.graphic(dTotalRollText, centerX - 48, centerY + defenseYrelToCenter);
-			
+
+			// draw offense
 			var offenseYrelToCenter:int = 88;
 			
-			// draw offense
-			var aDieImage:Image = Constants.IMG_OVERLAY_DICE[aDice[0] - 1];
-			
 			offenseHeaderText.alpha = fadeInForAndDelayAfter(10, 10);
+			var aDieImage:Image = Constants.IMG_OVERLAY_DICE[aDice[0] - 1];
 			Draw.graphic(offenseHeaderText, centerX / 2 - aDieImage.width / 2 * 3 + 16, centerY + offenseYrelToCenter - 116);
 			
 			var aDiceAlpha:Number = fadeInForAndDelayAfter(30, 0);
-			aDieImage.alpha = aDiceAlpha;
-			aDieImage.scale = 0.75;
-			Draw.graphic(aDieImage, centerX / 2 - aDieImage.width / 2 * 3 + 32, centerY - aDieImage.height / 2 + offenseYrelToCenter);
-			aDieImage = Constants.IMG_OVERLAY_DICE[aDice[1] - 1];
-			aDieImage.alpha = aDiceAlpha;
-			aDieImage.scale = 0.75;
-			Draw.graphic(aDieImage, centerX / 2 - aDieImage.width / 2 + 32, centerY - aDieImage.height / 2 + offenseYrelToCenter);
+			Draw.graphic(Constants.imageWithProperties(Constants.IMG_OVERLAY_DICE[aDice[0] - 1], aDiceAlpha, 0.75), 
+				centerX / 2 - aDieImage.width / 2 * 3 + 32, centerY - aDieImage.height / 2 + offenseYrelToCenter);
+			Draw.graphic(Constants.imageWithProperties(Constants.IMG_OVERLAY_DICE[aDice[1] - 1], aDiceAlpha, 0.75), 
+				centerX / 2 - aDieImage.width / 2 + 32, centerY - aDieImage.height / 2 + offenseYrelToCenter);
 			
 			aEscapeBonusText.alpha = fadeInForAndDelayAfter(15, 0);
 			if (aEscapeBonus > 0) {

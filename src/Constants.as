@@ -323,6 +323,12 @@ package
 			
 			return outVector;
 		}
+		
+		public static function imageWithProperties(image:Image, alpha:Number, scale:Number):Image {
+			image.alpha = alpha;
+			image.scale = scale;
+			return image;
+		}
 	}
 
 }
