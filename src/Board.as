@@ -690,6 +690,9 @@ package
 						}
 						dCardImage.scale = 0.75; // TODO - hack while i figure card size out
 						dCardImage.alpha = defenseCardAlpha;
+						if (j >= 0 && !canUseCardForCombat(dCards[j])) { // dim it if it's not valid for combat
+							dCardImage.alpha *= 0.33;
+						}
 						
 						var dCardY:int = combatY + 20;
 						if (selectedDefenseCard == j) // if it's the card selected
@@ -715,6 +718,9 @@ package
 						}
 						aCardImage.scale = 0.75; // TODO - hack while i figure card size out
 						aCardImage.alpha = attackCardAlpha;
+						if (j >= 0 && !canUseCardForCombat(aCards[j])) { // dim it if it's not valid for combat
+							aCardImage.alpha *= 0.33;
+						}
 						
 						var aCardY:int = combatY + 20;
 						if (selectedAttackCard == j) // if it's the card selected
@@ -1215,7 +1221,10 @@ package
 			{
 				changeState(Constants.GSTATE_COMBAT_RESOLVE);
 			}
-			// can't go back because defense has locked in
+			else if (inputArray[Constants.KEY_FIRE2] == Constants.INPUT_PRESSED) { // press back to go back to defense again
+				changeState(Constants.GSTATE_COMBAT_DEFENSE_SELECT);
+				return;
+			}
 			else if (inputArray[Constants.KEY_LEFT] == Constants.INPUT_PRESSED || inputArray[Constants.KEY_RIGHT] == Constants.INPUT_PRESSED) {
 				var cardMoveDirection:int = 0;
 				if (inputArray[Constants.KEY_LEFT] == Constants.INPUT_PRESSED) 
@@ -1422,6 +1431,10 @@ package
 		}
 		
 		private function canUseCardForCombat(card:BoardCard):Boolean {
+			if (selectedDefenseOption != Constants.COMBAT_DEFENSE_RUN && card.type == Constants.CARD_MOVE) {
+				return false; // can only pick move cards when you're doing escape
+			}
+			
 			if (card.type == Constants.CARD_TRAP) {
 				return false;
 			}
