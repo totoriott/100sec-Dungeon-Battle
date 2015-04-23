@@ -417,6 +417,9 @@ package
 					defensePlayer.initUX(); // will happen automatically for attack player
 					break;
 					
+				case Constants.GSTATE_DOROLL:
+					break;
+					
 				case Constants.GSTATE_ENDTURN:
 					break;
 			}
@@ -505,6 +508,10 @@ package
 					
 				case Constants.GSTATE_COMBAT_RESOLVE:
 					update_combatResolve(inputArray);
+					break;
+					
+				case Constants.GSTATE_DOREST:
+					update_doRest(inputArray);
 					break;
 					
 				case Constants.GSTATE_ENDTURN: // end turn cleanup
@@ -766,10 +773,13 @@ package
 					case Constants.PLAYERHUD_TYPE_CARDS:
 						// draw their hand
 						var offsetToDrawNoCard:int = (playerTurn == i)? 1 : 0; // draw the Nocard card if you're picking currently
-						for (j = 0 - offsetToDrawNoCard; j < cards.length; j++)
+						var offsetToDrawRestCard:int = (playerTurn == i)? 1 : 0; 
+						for (j = 0 - offsetToDrawNoCard; j < cards.length + offsetToDrawRestCard; j++)
 						{
 							var cardImage:Image = Constants.IMG_NO_CARD;
-							if (j >= 0) {
+							if (j == cards.length) {
+								cardImage = Constants.IMG_REST_CARD;
+							} else if (j >= 0) {
 								cardImage = cards[j].image;
 							}
 							cardImage.scale = 0.75; // TODO - hack while i figure card size out
@@ -862,9 +872,13 @@ package
 			
 			if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED) // select a card
 			{
-				changeState(Constants.GSTATE_DOROLL);
+				if (cardIndex == cards.length) {
+					changeState(Constants.GSTATE_DOREST);
+				} else {
+					changeState(Constants.GSTATE_DOROLL);
+				}
 			}
-			else if (inputArray[Constants.KEY_FIRE2] == Constants.INPUT_PRESSED || curPlayer.isStunned()) // rest
+			else if (curPlayer.isStunned()) // rest
 			{
 				// TODO: do resting
 			}
@@ -883,12 +897,12 @@ package
 				
 				cardIndex += cardMoveDirection;
 				while (cardMoveDirection != 0 && cardIndex != originalIndex 
-						&& (cardIndex < -1 || cardIndex >= cards.length || (cardIndex >= 0 && !canUseCardForRoll(curPlayer.getCards()[cardIndex])))) {		
+						&& (cardIndex < -1 || cardIndex > cards.length || (cardIndex >= 0 && cardIndex < cards.length && !canUseCardForRoll(curPlayer.getCards()[cardIndex])))) {		
 					cardIndex += cardMoveDirection;
-					if (cardIndex >= cards.length)
+					if (cardIndex > cards.length) // you can go one past end because of rest card
 						cardIndex = Math.min(-1, originalIndex); 
 					if (cardIndex < Math.min(-1, originalIndex))
-						cardIndex = cards.length - 1;
+						cardIndex = cards.length;
 				}
 			}
 		}
@@ -1615,6 +1629,26 @@ package
 			
 			trace();
 			// combat is over
+		}
+		
+		private function update_doRest(inputArray:Array):void
+		{
+			var curPlayer:Player = players[playerTurn];
+			
+			// TODO: technically if you're emptied you have a turn whre you don't gain cards
+			
+			for (var i:int = 0; i < Constants.CARDS_PER_REST; i++) {
+				if (curPlayer.getCards().length < Constants.HAND_CARD_LIMIT) {
+					curPlayer.giveCard(dealCardFromDeck());
+				}
+			}
+			
+			// TODO: idk how much you actually here so for now we're full healing
+			curPlayer.changeHp(curPlayer.getMaxHp());
+			
+			// TODO: overlay
+
+			changeState(Constants.GSTATE_ENDTURN);
 		}
 		
 		public function queueOverlay(overlay:GraphicOverlay):void {

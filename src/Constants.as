@@ -23,7 +23,8 @@ package
 		public static var GSTATE_COMBAT_DEFENSE_SELECTSURRENDER:int = 9;
 		public static var GSTATE_COMBAT_OFFENSE_SELECTCARD:int = 10;
 		public static var GSTATE_COMBAT_RESOLVE:int = 11;
-		public static var GSTATE_ENDTURN:int = 12;
+		public static var GSTATE_DOREST:int = 12;
+		public static var GSTATE_ENDTURN:int = 13;
 		
 		// Graphics things
 		public static var FRAMES_BETWEEN_SQUARES_MOVED:int = 5;
@@ -163,11 +164,13 @@ package
 			];
 			
 			IMG_NO_CARD = new Image(SRC_CARD_NOCARD);
+			IMG_REST_CARD = new Image(SRC_CARD_RESTCARD);
 		}
 		
 		// Game constants
 		public static var PLAYER_COUNT:int = 4;
 		public static var HAND_CARD_LIMIT:int = 5;
+		public static var CARDS_PER_REST:int = 2;
 		public static var BOARD_EXIT_COUNT:int = 1;
 		public static var BOARD_BOX_COUNT:int = 8;
 		public static var BOARD_FLAG_COUNT:int = 4;
@@ -218,7 +221,9 @@ package
 		[Embed(source = 'assets/img/card/trap_L.png')] private static const SRC_CARD_TRAP_L:Class;
 		[Embed(source = 'assets/img/card/trap_S.png')] private static const SRC_CARD_TRAP_S:Class;
 		[Embed(source = 'assets/img/card/nocard.png')] private static const SRC_CARD_NOCARD:Class;
+		[Embed(source = 'assets/img/card/rest.png')] private static const SRC_CARD_RESTCARD:Class;
 		public static var IMG_NO_CARD:Image;
+		public static var IMG_REST_CARD:Image;
 		
 		// Item/treasure constants
 		[Embed(source = 'assets/img/item/0.png')] private static const SRC_ITEM_0:Class;
