@@ -1026,7 +1026,6 @@ package
 					
 					if (isPlayerSpace(newSquare)) { // you're moving onto someone 
 						playerWalk = playerWalk.slice(0, 0); // stop moving
-						// TODO: if the last thing you walk on is a trap it will always be activated. maybe fix
 						
 						// set up the attack. if it's still there after space resolution then fight
 						attackPlayer = players[playerTurn];
@@ -1035,10 +1034,14 @@ package
 						curPlayer.incrementStepsWalked(1);
 						curPlayer.moveToSpace(newSquare);
 						
-						if (getSpaceForPos(newSquare).type == Constants.BOARD_TRAP) {
-							// TODO: chance of evade
-							
-							playerWalk = playerWalk.slice(0, 0); // whoops it seems your journey has ended here
+						// TODO: if the last thing you walk on is a trap it will always be activated. maybe fix
+						if (getSpaceForPos(newSquare).type == Constants.BOARD_TRAP && playerWalk.length != 0) {
+							var evaded:Boolean = curPlayer.rollToEvadeTrap();
+							if (!evaded) {
+								playerWalk = playerWalk.slice(0, 0); // whoops it seems your journey has ended here
+							} else {
+								queueOverlay(new OverlayActivateTrap(curPlayer, 0, evaded));
+							}
 						}
 					}
 
@@ -1064,7 +1067,7 @@ package
 			{
 				case Constants.BOARD_TRAP:
 					curPlayer.sufferFromTrap(space.value);
-					queueOverlay(new OverlayActivateTrap(curPlayer, space.value));
+					queueOverlay(new OverlayActivateTrap(curPlayer, space.value, false));
 					
 					board[playerPos.row][playerPos.col].changeTo(Constants.BOARD_EMPTY, 0); // empty out the space
 					break;

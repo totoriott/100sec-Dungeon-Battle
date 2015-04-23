@@ -39,6 +39,7 @@ package
 		internal var cardBonus_attack:int = 0;
 		internal var cardBonus_defense:int = 0;
 		internal var cardBonus_escape:int = 0;
+		internal var cardBonus_evade:int = 0;
 		
 		internal var lastEscapeRoll:Array = [];
 		internal var lastMovementRoll:Array = [];
@@ -283,6 +284,17 @@ package
 			}
 		}
 		
+		// TODO - i have literally no idea how this works in the real game
+		public function rollToEvadeTrap():Boolean {
+			if (cardBonus_evade >= 99999) { // perfect evade from cards
+				return true;
+			}
+			
+			// temporary formula
+			var totalEvade:int = getMoveBonus() + cardBonus_evade + 1;
+			return Math.random() * 25 < totalEvade;
+		}
+		
 		public function sufferFromTrap(value:int):void {
 			switch (value) {
 				case Constants.TRAP_DAMAGE:
@@ -315,6 +327,7 @@ package
 			cardBonus_attack = 0;
 			cardBonus_defense = 0;
 			cardBonus_escape = 0;
+			cardBonus_evade = 0;
 			card_combatActivated = null;
 			card_boardActivated = null;
 			
@@ -345,7 +358,11 @@ package
 			}
 			
 			if (card.type == Constants.CARD_DEF) {
-				// TODO: increase trap evasion
+				cardBonus_evade = card.value;
+				
+				if (card.value == Constants.DEF_A || card.value == Constants.DEF_D) {
+					cardBonus_evade = 99999; // always perfect evade (TODO: confirm this)
+				}
 			}
 			
 			// TRAPs placed on board in update_doRoll

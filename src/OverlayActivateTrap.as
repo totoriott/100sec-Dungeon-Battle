@@ -19,8 +19,11 @@ package
 		private var trapText1:Text;
 		private var trapText2:Text;
 		
-		public function OverlayActivateTrap(player:Player, trapType:int) 
+		public function OverlayActivateTrap(player:Player, trapType:int, evaded:Boolean) 
 		{
+			fadeOutStartTime = 115;
+			fadeOutLength = 5;
+			
 			timer = 0;
 			
 			type = trapType;
@@ -46,25 +49,27 @@ package
 					break;
 			}
 			
-			trapText1 = new Text(player.getName() + " activated a " + trapName + " trap!", 0, 0, { "size": 32 });
-			trapText1.font = "Segoe";
-			trapText1.color = 0xFFFFFF;
+			trapText1 = getText(player.getName() + " stepped on a trap!", 32); // TODO: make this fancier, maybe use name
 			
-			trapText2 = new Text(trapDesc, 0, 0, { "size": 32 });
-			trapText2.font = "Segoe";
-			trapText2.color = 0xFFFFFF;
+			if (evaded) {
+				trapText2 = getText("But they avoided activating it!", 32);
+			} else {
+				trapText2 = getText(trapDesc, 32);
+			}
 		}
 		
 		override public function render(x:int, y:int):void
 		{
+			startTimerSchedule();
+			
 			var centerY:int = Constants.GAME_HEIGHT / 2;
 			var centerX:int = Constants.GAME_WIDTH / 2;
 			
-			var heightOfOverlay:int = 150 * Constants.graphicsAnimationPercentFromTiming(timer, 0, 5, 115, 5);
+			var heightOfOverlay:int = 150 * fadeInForAndDelayAfter(5, 0);
 			Draw.rect(0, centerY - heightOfOverlay / 2, Constants.GAME_WIDTH, heightOfOverlay, 0x444444, 0.80);
 			
 			// these are hardcoded sorry
-			trapText1.alpha = Constants.graphicsAnimationPercentFromTiming(timer, 5, 5, 115, 5);
+			trapText1.alpha = fadeInForAndDelayAfter(10, 15);
 			Draw.graphic(trapText1, centerX - 112, centerY - 66);
 			
 			// TODO: no image for now
@@ -77,7 +82,7 @@ package
 			flagImage.alpha = flagAlpha;
 			Draw.graphic(flagImage, centerX / 2 - flagImage.width / 2, centerY - flagImage.height / 2);*/
 
-			trapText2.alpha = Constants.graphicsAnimationPercentFromTiming(timer, 10, 5, 115, 5);
+			trapText2.alpha = fadeInForAndDelayAfter(10, 0);
 			Draw.graphic(trapText2, centerX - 112, centerY - 26);
 		}
 			
