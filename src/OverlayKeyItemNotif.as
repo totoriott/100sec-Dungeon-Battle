@@ -14,8 +14,6 @@ package
 	 */
 	public class OverlayKeyItemNotif extends GraphicOverlay 
 	{
-		private var timer:int = 0;
-		
 		private var item:BoardItem;
 		
 		private var notifText1:Text;

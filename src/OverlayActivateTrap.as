@@ -14,8 +14,6 @@ package
 	 */
 	public class OverlayActivateTrap extends GraphicOverlay 
 	{
-		private var timer:int = 0;
-		
 		private var type:int;
 		
 		private var trapText1:Text;

@@ -14,8 +14,6 @@ package
 	 */
 	public class OverlayMovementRoll extends GraphicOverlay 
 	{
-		private var timer:int = 0;
-		
 		private var dice:Array;
 		private var moveBonus:int;
 		private var cardBonus:int;

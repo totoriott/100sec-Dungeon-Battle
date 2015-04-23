@@ -14,8 +14,6 @@ package
 	 */
 	public class OverlayGetFlag extends GraphicOverlay 
 	{
-		private var timer:int = 0;
-		
 		private var type:int;
 		private var value:int;
 		

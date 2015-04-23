@@ -1531,8 +1531,11 @@ package
 			if (selectedDefenseOption == Constants.COMBAT_DEFENSE_RUN) {
 				var attackEscape:int = attackPlayer.doEscapeRoll();
 				var defenseEscape:int = defensePlayer.doEscapeRoll();
+				var escapeSucceeded:Boolean = defenseEscape > attackEscape;
 				
-				if (attackEscape >= defenseEscape) {
+				queueOverlay(new OverlayEscapeRoll(defensePlayer, attackPlayer, escapeSucceeded)); 
+				
+				if (!escapeSucceeded) {
 					trace("Escape failed!");
 					selectedDefenseOption = Constants.COMBAT_DEFENSE_NOTHING;
 				} else {

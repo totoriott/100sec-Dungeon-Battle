@@ -14,8 +14,6 @@ package
 	 */
 	public class OverlaySurrenderItem extends GraphicOverlay 
 	{
-		private var timer:int = 0;
-		
 		private var isKeyItem:Boolean;
 		private var item:BoardItem;
 		

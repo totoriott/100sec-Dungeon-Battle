@@ -14,10 +14,7 @@ package
 	 */
 	public class OverlayEscapeRoll extends GraphicOverlay 
 	{
-		private var timer:int = 0;
 		private var totalAnimationTime:int = 420;
-		private var fadeOutStartTime:int = 405;
-		private var fadeOutLength:int = 15;
 		private var skipToTime:int = 260;
 		
 		private var dDice:Array;
@@ -42,7 +39,11 @@ package
 		private var successText:Text;
 		
 		public function OverlayEscapeRoll(dPlayer:Player, aPlayer:Player, escapeSuccess:Boolean)
-		{
+		{			
+			fadeOutStartTime = 405;
+			fadeOutLength = 15;
+			
+			// TODO: refactor other overlays to be nice like this one
 			timer = 0;
 			
 			dDice = dPlayer.getEscapeRoll();
@@ -55,45 +56,22 @@ package
 			aCardBonus = aPlayer.getCardBonusEscape();
 			aTotalRoll = aPlayer.getEscapeRollValue();
 			
-			dEscapeBonusText = new Text("+ " +dEscapeBonus + " escape bonus", 0, 0, { "size": 24 });
-			dEscapeBonusText.font = "Segoe";
-			dEscapeBonusText.color = 0xFFFFFF;
+			dEscapeBonusText = getText("+ " +dEscapeBonus + " escape bonus", 24);
+			dCardBonusText = getText("+ " + dCardBonus + " card bonus", 24);
+			dTotalRollText = getText("= " + dTotalRoll + " total escape", 32);
 			
-			dCardBonusText = new Text("+ " + dCardBonus + " card bonus", 0, 0, { "size": 24 });
-			dCardBonusText.font = "Segoe";
-			dCardBonusText.color = 0xFFFFFF;
-			
-			dTotalRollText = new Text("= " + dTotalRoll + " total escape", 0, 0, { "size": 32 });
-			dTotalRollText.font = "Segoe";
-			dTotalRollText.color = 0xFFFFFF;
-			
-			aEscapeBonusText = new Text("+ " + aEscapeBonus + " escape bonus", 0, 0, { "size": 24 });
-			aEscapeBonusText.font = "Segoe";
-			aEscapeBonusText.color = 0xFFFFFF;
-			
-			aCardBonusText = new Text("+ " + aCardBonus + " card bonus", 0, 0, { "size": 24 });
-			aCardBonusText.font = "Segoe";
-			aCardBonusText.color = 0xFFFFFF;
-			
-			aTotalRollText = new Text("= " + aTotalRoll + " total escape", 0, 0, { "size": 32 });
-			aTotalRollText.font = "Segoe";
-			aTotalRollText.color = 0xFFFFFF;
-			
-			defenseHeaderText = new Text(dPlayer.getName() + " tries to escape!", 0, 0, { "size": 32 } ); 
-			defenseHeaderText.font = "Segoe";
-			defenseHeaderText.color = 0xFFFFFF; 
-			
-			offenseHeaderText = new Text(aPlayer.getName() + " pursues them!", 0, 0, { "size": 32 } ); 
-			offenseHeaderText.font = "Segoe";
-			offenseHeaderText.color = 0xFFFFFF; 
+			aEscapeBonusText = getText("+ " + aEscapeBonus + " escape bonus", 24);
+			aCardBonusText = getText("+ " + aCardBonus + " card bonus", 24);
+			aTotalRollText = getText("= " + aTotalRoll + " total escape", 32);
+
+			defenseHeaderText = getText(dPlayer.getName() + " tries to escape!", 32); 
+			offenseHeaderText = getText(aPlayer.getName() + " pursues them!", 32); 
 			
 			if (escapeSuccess) {
-				successText = new Text(dPlayer.getName() + " escaped successfully!", 0, 0, { "size": 32 } ); 
+				successText = getText(dPlayer.getName() + " escaped successfully!", 32); 
 			} else {
-				successText = new Text(dPlayer.getName() + " couldn't escape!", 0, 0, { "size": 32 } ); 
+				successText = getText(dPlayer.getName() + " couldn't escape!", 32); 
 			}
-			successText.font = "Segoe";
-			successText.color = 0xFFFFFF; 
 		}
 		
 		override public function render(x:int, y:int):void
@@ -101,7 +79,9 @@ package
 			var centerY:int = Constants.GAME_HEIGHT / 2;
 			var centerX:int = Constants.GAME_WIDTH / 2;
 			
-			var heightOfOverlay:int = 400 * Constants.graphicsAnimationPercentFromTiming(timer, 0, 10, fadeOutStartTime, fadeOutLength);
+			startTimerSchedule();
+			
+			var heightOfOverlay:int = 400 * fadeInForAndDelayAfter(10, 0);
 			Draw.rect(0, centerY - heightOfOverlay / 2, Constants.GAME_WIDTH, heightOfOverlay, 0x444444, 0.80);
 			
 			// draw defense
@@ -109,10 +89,10 @@ package
 
 			var dDieImage:Image = Constants.IMG_OVERLAY_DICE[dDice[0] - 1];
 			
-			defenseHeaderText.alpha = Constants.graphicsAnimationPercentFromTiming(timer, 10, 10, fadeOutStartTime, fadeOutLength);
+			defenseHeaderText.alpha = fadeInForAndDelayAfter(10, 10);
 			Draw.graphic(defenseHeaderText, centerX / 2 - dDieImage.width / 2 * 3 + 16, centerY + defenseYrelToCenter - 116);
 			
-			var dDiceAlpha:Number = Constants.graphicsAnimationPercentFromTiming(timer, 30, 30, fadeOutStartTime, fadeOutLength);
+			var dDiceAlpha:Number =  fadeInForAndDelayAfter(30, 0);
 			dDieImage.alpha = dDiceAlpha;
 			dDieImage.scale = 0.75;
 			Draw.graphic(dDieImage, centerX / 2 - dDieImage.width / 2 * 3 + 32, centerY - dDieImage.height / 2 + defenseYrelToCenter);
@@ -121,17 +101,17 @@ package
 			dDieImage.scale = 0.75;
 			Draw.graphic(dDieImage, centerX / 2 - dDieImage.width / 2 + 32, centerY - dDieImage.height / 2 + defenseYrelToCenter);
 			
-			dEscapeBonusText.alpha = Constants.graphicsAnimationPercentFromTiming(timer, 60, 15, fadeOutStartTime, fadeOutLength);
+			dEscapeBonusText.alpha = fadeInForAndDelayAfter(15, 0);
 			if (dEscapeBonus > 0) {
 				Draw.graphic(dEscapeBonusText, centerX - 112, centerY + defenseYrelToCenter - 76);
 			}
 			
-			dCardBonusText.alpha = Constants.graphicsAnimationPercentFromTiming(timer, 75, 15, fadeOutStartTime, fadeOutLength);
+			dCardBonusText.alpha = fadeInForAndDelayAfter(15, 0);
 			if (dCardBonus > 0) {
 				Draw.graphic(dCardBonusText, centerX - 80, centerY + defenseYrelToCenter - 36);
 			}
 			
-			dTotalRollText.alpha = Constants.graphicsAnimationPercentFromTiming(timer, 90, 15, fadeOutStartTime, fadeOutLength);
+			dTotalRollText.alpha = fadeInForAndDelayAfter(15, 30);
 			Draw.graphic(dTotalRollText, centerX - 48, centerY + defenseYrelToCenter);
 			
 			var offenseYrelToCenter:int = 88;
@@ -139,10 +119,10 @@ package
 			// draw offense
 			var aDieImage:Image = Constants.IMG_OVERLAY_DICE[aDice[0] - 1];
 			
-			offenseHeaderText.alpha = Constants.graphicsAnimationPercentFromTiming(timer, 135, 10, fadeOutStartTime, fadeOutLength);
+			offenseHeaderText.alpha = fadeInForAndDelayAfter(10, 10);
 			Draw.graphic(offenseHeaderText, centerX / 2 - aDieImage.width / 2 * 3 + 16, centerY + offenseYrelToCenter - 116);
 			
-			var aDiceAlpha:Number = Constants.graphicsAnimationPercentFromTiming(timer, 155, 30, fadeOutStartTime, fadeOutLength);
+			var aDiceAlpha:Number = fadeInForAndDelayAfter(30, 0);
 			aDieImage.alpha = aDiceAlpha;
 			aDieImage.scale = 0.75;
 			Draw.graphic(aDieImage, centerX / 2 - aDieImage.width / 2 * 3 + 32, centerY - aDieImage.height / 2 + offenseYrelToCenter);
@@ -151,21 +131,21 @@ package
 			aDieImage.scale = 0.75;
 			Draw.graphic(aDieImage, centerX / 2 - aDieImage.width / 2 + 32, centerY - aDieImage.height / 2 + offenseYrelToCenter);
 			
-			aEscapeBonusText.alpha = Constants.graphicsAnimationPercentFromTiming(timer, 185, 15, fadeOutStartTime, fadeOutLength);
+			aEscapeBonusText.alpha = fadeInForAndDelayAfter(15, 0);
 			if (aEscapeBonus > 0) {
 				Draw.graphic(aEscapeBonusText, centerX - 112, centerY - 76 + offenseYrelToCenter);
 			}
 			
-			aCardBonusText.alpha = Constants.graphicsAnimationPercentFromTiming(timer, 200, 15, fadeOutStartTime, fadeOutLength);
+			aCardBonusText.alpha = fadeInForAndDelayAfter(15, 0);
 			if (aCardBonus > 0) {
 				Draw.graphic(aCardBonusText, centerX - 80, centerY - 36 + offenseYrelToCenter);
 			}
 			
-			aTotalRollText.alpha = Constants.graphicsAnimationPercentFromTiming(timer, 215, 15, fadeOutStartTime, fadeOutLength);
+			aTotalRollText.alpha = fadeInForAndDelayAfter(15, 20);
 			Draw.graphic(aTotalRollText, centerX - 48, centerY + offenseYrelToCenter);
 			
 			// draw success
-			successText.alpha = Constants.graphicsAnimationPercentFromTiming(timer, 250, 10, fadeOutStartTime, fadeOutLength);
+			successText.alpha = fadeInForAndDelayAfter(10, 0);
 			Draw.graphic(successText, centerX / 2 - aDieImage.width / 2 * 3 + 16, centerY + offenseYrelToCenter + 40);
 		}
 			
