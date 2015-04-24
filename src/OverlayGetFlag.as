@@ -55,7 +55,7 @@ package
 			var flagAlpha:Number = Constants.graphicsAnimationPercentFromTiming(timer, 25, 15, 115, 5);
 			var flagImage:Image = null;
 			if (type == Constants.FLAG_TYPE_POINTS) {
-				flagImage = Constants.IMG_OVERLAY_DICE[value];
+				flagImage = Constants.IMG_OVERLAY_FLAG[value];
 			}
 			flagImage.alpha = flagAlpha;
 			Draw.graphic(flagImage, centerX / 2 - flagImage.width / 2, centerY - flagImage.height / 2);

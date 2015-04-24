@@ -287,9 +287,19 @@ package
 		[Embed(source = 'assets/img/overlay/dice_5.png')] private static const SRC_OVERLAY_DICE5:Class;
 		[Embed(source = 'assets/img/overlay/dice_6.png')] private static const SRC_OVERLAY_DICE6:Class;
 		public static var IMG_OVERLAY_DICE:Array;
+		[Embed(source = 'assets/img/overlay/flag_1.png')] private static const SRC_OVERLAY_FLAG1:Class;
+		[Embed(source = 'assets/img/overlay/flag_2.png')] private static const SRC_OVERLAY_FLAG2:Class;
+		[Embed(source = 'assets/img/overlay/flag_3.png')] private static const SRC_OVERLAY_FLAG3:Class;
+		[Embed(source = 'assets/img/overlay/flag_4.png')] private static const SRC_OVERLAY_FLAG4:Class;
+		[Embed(source = 'assets/img/overlay/flag_5.png')] private static const SRC_OVERLAY_FLAG5:Class;
+		[Embed(source = 'assets/img/overlay/flag_6.png')] private static const SRC_OVERLAY_FLAG6:Class;
+		public static var IMG_OVERLAY_FLAG:Array;
 		public static function initOverlayGraphics():void {
 			IMG_OVERLAY_DICE = [new Image(SRC_OVERLAY_DICE1), new Image(SRC_OVERLAY_DICE2), new Image(SRC_OVERLAY_DICE3), 
 				new Image(SRC_OVERLAY_DICE4), new Image(SRC_OVERLAY_DICE5), new Image(SRC_OVERLAY_DICE6)];
+				
+			IMG_OVERLAY_FLAG = [new Image(SRC_OVERLAY_FLAG1), new Image(SRC_OVERLAY_FLAG2), new Image(SRC_OVERLAY_FLAG3), 
+				new Image(SRC_OVERLAY_FLAG4), new Image(SRC_OVERLAY_FLAG5), new Image(SRC_OVERLAY_FLAG6)];
 		}
 		
 		public static function graphicsAnimationPercentFromTiming(time:int, fadeInStart:int, inDuration:int, fadeOutStart:int, outDuration:int):Number {
