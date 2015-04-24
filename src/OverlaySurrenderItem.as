@@ -20,7 +20,7 @@ package
 		private var getItemText:Text;
 		private var keyItemText:Text;
 		
-		public function OverlaySurrenderItem(fromPlayer:Player, toPlayer:Player, mItem:int, keyItem:Boolean) 
+		public function OverlaySurrenderItem(fromPlayer:Player, toPlayer:Player, mItem:int, keyItem:Boolean, defeatedInBattle:Boolean) 
 		{
 			timer = 0;
 			
@@ -28,13 +28,13 @@ package
 			isKeyItem = keyItem;
 			
 			//  TODO: Sizing on this sucks
-			getItemText = new Text(fromPlayer.getName() + " surrendered an item to " + toPlayer.getName() + ".", 0, 0, { "size": 24 });
-			getItemText.font = "Segoe";
-			getItemText.color = 0xFFFFFF;
+			if (defeatedInBattle) {
+				getItemText = getText(toPlayer.getName() + " took an item from " + fromPlayer.getName() + "!", 24);
+			} else {
+				getItemText = getText(fromPlayer.getName() + " surrendered an item to " + toPlayer.getName() + ".", 24);
+			}
 			
-			keyItemText = new Text("It's the key item! Get to the exit!", 0, 0, { "size": 24 });
-			keyItemText.font = "Segoe";
-			keyItemText.color = 0xFFFFFF;
+			keyItemText = getText("It's the key item! Get to the exit!", 24);
 		}
 		
 		override public function render(x:int, y:int):void

@@ -43,16 +43,16 @@ package
 		}
 		
 		// Caches text strings and returns/creates them intelligently
-		public function getText(text:String, size:int):Text {
+		public function getText(text:String, size:int, color:uint=0xFFFFFF):Text {
 			if (textCache == null) {
 				textCache = new Dictionary();
 			}
 			
-			var key:String = text + size;
+			var key:String = text + size + color;
 			if (textCache[key] == null) {
 				var newText:Text = new Text(text, 0, 0, { "size": size } );
 				newText.font = "Segoe";
-				newText.color = 0xFFFFFF; // TODO: modify this?
+				newText.color = color;
 				textCache[key] = newText;
 			}
 			

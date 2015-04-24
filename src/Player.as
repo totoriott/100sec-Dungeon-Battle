@@ -11,7 +11,7 @@ package
 		internal var playerNumber:int = -1;
 		
 		internal var level:int = 1;
-		internal var skillPoints:Array = [4, 2, 3, 3];
+		internal var skillPoints:Array = [14, 2, 3, 3];
 		
 		internal var name:String = "Nameless"; // TODO - funny default name
 		internal var hp:int = 10;

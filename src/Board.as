@@ -1,6 +1,7 @@
 package  
 {
 	import flash.display.Graphics;
+	import flash.utils.Dictionary;
 	import net.flashpunk.FP;
 	import net.flashpunk.Entity;
 	import net.flashpunk.Graphic;
@@ -41,7 +42,8 @@ package
 		private var playerPossibleWalks:Vector.<Vector.<Vector.<Vector.<BoardPosition>>>>; // the board, where each square is possible walks to that square this turn
 		
 		private var moveTimer:int = 0; 
-		public var overlaysQueue:Vector.<GraphicOverlay>;
+		public var overlaysQueue:Vector.<GraphicOverlay>;		
+		protected var textCache:Dictionary;
 		
 		public function Board() 
 		{
@@ -50,6 +52,8 @@ package
 		
 		public function initNewGame():void
 		{
+			textCache = null; // clear the text cache
+			
 			createNewDeck();
 			
 			initBoard();
@@ -416,6 +420,10 @@ package
 					attackPlayer.initUX();
 					defensePlayer.initUX(); // will happen automatically for attack player
 					break;
+				
+				case Constants.GSTATE_COMBAT_DEFEATED_SELECTREWARD:
+					selectedSurrenderItem = -1;
+					break;
 					
 				case Constants.GSTATE_DOROLL:
 					break;
@@ -508,6 +516,10 @@ package
 					
 				case Constants.GSTATE_COMBAT_RESOLVE:
 					update_combatResolve(inputArray);
+					break;
+					
+				case Constants.GSTATE_COMBAT_DEFEATED_SELECTREWARD:
+					update_combatSelectRewards(inputArray);
 					break;
 					
 				case Constants.GSTATE_DOREST:
@@ -622,10 +634,65 @@ package
 			}
 			
 			// draw combat overlay if battle is happening
-			if (gameStateIsCombat()) {
-				var combatX:int = 24;
-				var combatY:int = 24;
+			var combatX:int = 24;
+			var combatY:int = 24;
+			if (gameStateIsCombat() && gameState == Constants.GSTATE_COMBAT_DEFEATED_SELECTREWARD) { // draw specialized post-battle stuff
+				var defeatedString:String = attackPlayer.getName() + " defeated " + defensePlayer.getName() + "!"
+				var defeatedString2:String = "Select an item to take from them.";
+				Draw.graphic(getText(defeatedString, 24, 0x000000), combatX, combatY);
+				combatY += 32;
+				Draw.graphic(getText(defeatedString2, 24, 0x000000), combatX, combatY);
+				combatY += 16;
 				
+				// draw defense items that you can steal from
+				var dItems:Vector.<BoardItem> = defensePlayer.getItems();
+				if (dItems.length <= 4) { // 4 items or less 
+					for (j = 0; j < dItems.length + 1; j++) {
+						var dItemId:int = j - 1;
+						if (dItemId >= 0) {
+							var dItem:BoardItem = dItems[dItemId];
+							var dItemImage:Image = dItem.image;
+						} else {
+							dItem = null;
+							dItemImage = Constants.IMG_ITEM_NOITEM;
+						}
+						dItemImage.scale = 0.5; // TODO - hack while i figure card size out (128 / 2 = 64)
+						dItemImage.alpha = 1;
+						var dItemY:int = combatY + 32;
+						if (dItemId == selectedSurrenderItem) {
+							Draw.rect(combatX + 72 * j, dItemY, 72, 72, 0xFFFF00, 1);
+						}
+						
+						if (dItem != null && dItem.id == keyItemId && dItem.fromThisBoard) {
+							Draw.rect(combatX + 72 * j + 8, dItemY + 8, 56, 56, 0xFF0000, 0.5);
+						}
+						Draw.graphic(dItemImage, combatX + 72 * j, dItemY);
+					}
+				} else { // 8 items or less (TODO: if you have more then whoops)
+					for (j = 0; j < dItems.length + 1; j++) {
+						dItemId = j - 1;
+						if (dItemId >= 0) {
+							dItem = dItems[dItemId];
+							dItem = dItems[dItemId];
+							dItemImage = dItem.image;
+						} else {
+							dItem = null;
+							dItemImage = Constants.IMG_ITEM_NOITEM;
+						}
+						dItemImage.scale = 0.25; // TODO - hack while i figure card size out (128 / 4 = 32)
+						dItemImage.alpha = 1;
+						dItemY = combatY + 16;
+						if (dItemId == selectedSurrenderItem) {
+							Draw.rect(combatX + 36 * j, dItemY, 36, 36, 0xFFFF00, 1);
+						}
+						
+						if (dItem != null && dItem.id == keyItemId && dItem.fromThisBoard) {
+							Draw.rect(combatX + 36 * j + 4, dItemY + 4, 28, 28, 0xFF0000, 0.5);
+						}
+						Draw.graphic(dItemImage, combatX + 36 * j, dItemY);
+					}
+				} 
+			} else if (gameStateIsCombat()) {				
 				// draw defender
 				playerSprite = Constants.PLAYER_SPRITES[defensePlayer.getPlayerNumber()];
 				playerSprite.alpha = 1;
@@ -651,14 +718,14 @@ package
 					var itemSurrenderAlpha:Number = gameState == (Constants.GSTATE_COMBAT_DEFENSE_SELECTSURRENDER) ? 1 : 0.5;
 					
 					// draw defender items to surrender
-					var dItems:Vector.<BoardItem> = defensePlayer.getItems();
+					dItems = defensePlayer.getItems();
 					if (dItems.length <= 4) { // 4 items or less 
 						for (j = 0; j < dItems.length; j++) {
-							var dItem:BoardItem = dItems[j];
-							var dItemImage:Image = dItem.image;
+							dItem = dItems[j];
+							dItemImage = dItem.image;
 							dItemImage.scale = 0.5; // TODO - hack while i figure card size out (128 / 2 = 64)
 							dItemImage.alpha = itemSurrenderAlpha;
-							var dItemY:int = combatY + 32;
+							dItemY = combatY + 32;
 							if (j == selectedSurrenderItem) {
 								Draw.rect(combatX + 72 * j, dItemY, 72, 72, 0xFFFF00, itemSurrenderAlpha);
 							}
@@ -1273,7 +1340,11 @@ package
 		}
 		
 		private function update_combatResolve(inputArray:Array):void {
-			changeState(Constants.GSTATE_ENDTURN); // TODO: everything
+			if (defensePlayer.getHp() == 0) {// defense was defeated in combat. probably no double KOs 
+				changeState(Constants.GSTATE_COMBAT_DEFEATED_SELECTREWARD);
+			} else {
+				changeState(Constants.GSTATE_ENDTURN);
+			}
 		}
 
 		private function update_endTurn(inputArray:Array):void
@@ -1532,7 +1603,8 @@ package
 		
 		private function gameStateIsCombat():Boolean {
 			return gameState == Constants.GSTATE_COMBAT_DEFENSE_SELECT || gameState == Constants.GSTATE_COMBAT_DEFENSE_SELECTCARD || 
-				gameState == Constants.GSTATE_COMBAT_DEFENSE_SELECTSURRENDER || gameState == Constants.GSTATE_COMBAT_OFFENSE_SELECTCARD;
+				gameState == Constants.GSTATE_COMBAT_DEFENSE_SELECTSURRENDER || gameState == Constants.GSTATE_COMBAT_OFFENSE_SELECTCARD ||
+				gameState == Constants.GSTATE_COMBAT_DEFEATED_SELECTREWARD || gameState == Constants.GSTATE_COMBAT_RESOLVE;
 		}
 		
 		// resolves all the combat stuff. outside of changeState bc it's easier
@@ -1558,7 +1630,7 @@ package
 				// defense teleports away
 				defensePlayer.moveToSpace(getEmptySpaceOnBoard()); 
 				
-				queueOverlay(new OverlaySurrenderItem(defensePlayer, attackPlayer, transferItem.id, transferItem.fromThisBoard && transferItem.id == keyItemId));
+				queueOverlay(new OverlaySurrenderItem(defensePlayer, attackPlayer, transferItem.id, transferItem.fromThisBoard && transferItem.id == keyItemId, false));
 				return; // end combat
 			}
 			
@@ -1595,11 +1667,9 @@ package
 			
 			// TODO: criticals?
 			if (defensePlayer.getHp() <= 0) {
+				// post battle will happen in separate state
 				trace(defensePlayer.getName() + " was defeated!");
 				attackPlayer.incrementEnemiesKOed(1);
-				defensePlayer.respawn();
-				defensePlayer.moveToSpace(getEmptySpaceOnBoard()); 
-				// TODO: steal item??
 				return; // end combat 
 			}
 			
@@ -1618,17 +1688,49 @@ package
 				attackPlayer.changeHp( -1 * damage);
 				
 				if (attackPlayer.getHp() <= 0) {
+					// post battle will happen in separate state
 					trace(attackPlayer.getName() + " was defeated!");
 					defensePlayer.incrementEnemiesKOed(1);
-					attackPlayer.respawn();
-					attackPlayer.moveToSpace(getEmptySpaceOnBoard()); 
-					// TODO: steal item??
+					
+					var tempPlayer:Player = attackPlayer;
+					attackPlayer = defensePlayer;
+					defensePlayer = attackPlayer; // switch who 'lost'
 					return; // end combat 
 				}
 			}
 			
 			trace();
 			// combat is over
+		}
+		
+		private function update_combatSelectRewards(inputArray:Array):void {
+			if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED || defensePlayer.getItems().length == 0)
+			{
+				if (selectedSurrenderItem >= 0) {
+					var transferItem:BoardItem = defensePlayer.removeItem(selectedSurrenderItem);
+					attackPlayer.addItem(transferItem);
+					
+					queueOverlay(new OverlaySurrenderItem(defensePlayer, attackPlayer, transferItem.id, transferItem.fromThisBoard && transferItem.id == keyItemId, true));
+				}				
+				
+				// defense teleports away
+				defensePlayer.respawn();
+				defensePlayer.moveToSpace(getEmptySpaceOnBoard()); 
+				
+				changeState(Constants.GSTATE_ENDTURN);
+			}
+			else if (inputArray[Constants.KEY_LEFT] == Constants.INPUT_PRESSED) {
+				selectedSurrenderItem--;
+				if (selectedSurrenderItem < -1) {
+					selectedSurrenderItem = defensePlayer.getItems().length - 1;
+				}
+			}
+			else if (inputArray[Constants.KEY_RIGHT] == Constants.INPUT_PRESSED) {
+				selectedSurrenderItem++;
+				if (selectedSurrenderItem > defensePlayer.getItems().length - 1) {
+					selectedSurrenderItem = -1;
+				}
+			}
 		}
 		
 		private function update_doRest(inputArray:Array):void
@@ -1653,6 +1755,23 @@ package
 		
 		public function queueOverlay(overlay:GraphicOverlay):void {
 			overlaysQueue.push(overlay);
+		}
+		
+		// Caches text strings and returns/creates them intelligently
+		public function getText(text:String, size:int, color:uint=0xFFFFFF):Text {
+			if (textCache == null) {
+				textCache = new Dictionary();
+			}
+			
+			var key:String = text + size + color;
+			if (textCache[key] == null) {
+				var newText:Text = new Text(text, 0, 0, { "size": size } );
+				newText.font = "Segoe";
+				newText.color = color;
+				textCache[key] = newText;
+			}
+			
+			return textCache[key];
 		}
 	}
 }
