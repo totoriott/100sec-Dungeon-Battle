@@ -1284,7 +1284,11 @@ package
 			}
 			
 			// select which defense option will be used
-			if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED)
+			if (defensePlayer is Enemy) {
+				selectedDefenseOption = Constants.COMBAT_DEFENSE_COUNTER;
+				changeState(Constants.GSTATE_COMBAT_DEFENSE_SELECTCARD);
+			} 
+			else if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED)
 			{
 				if (selectedDefenseOption == Constants.COMBAT_DEFENSE_SURRENDER) {
 					changeState(Constants.GSTATE_COMBAT_DEFENSE_SELECTSURRENDER);
@@ -1331,7 +1335,11 @@ package
 		
 		private function update_combatDefenseSelectCard(inputArray:Array):void {
 			// select what defense card will be used
-			if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED)
+			if (defensePlayer is Enemy) {
+				selectedDefenseCard = -1;
+				changeState(Constants.GSTATE_COMBAT_OFFENSE_SELECTCARD);
+			} 
+			else if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED)
 			{
 				changeState(Constants.GSTATE_COMBAT_OFFENSE_SELECTCARD);
 			}
@@ -1375,7 +1383,7 @@ package
 			{
 				changeState(Constants.GSTATE_COMBAT_RESOLVE);
 			}
-			else if (inputArray[Constants.KEY_FIRE2] == Constants.INPUT_PRESSED) { // press back to go back to defense again
+			else if (inputArray[Constants.KEY_FIRE2] == Constants.INPUT_PRESSED && !(defensePlayer is Enemy)) { // press back to go back to defense again
 				changeState(Constants.GSTATE_COMBAT_DEFENSE_SELECT);
 				return;
 			}
@@ -1410,7 +1418,7 @@ package
 		}
 		
 		private function update_combatResolve(inputArray:Array):void {
-			if (defensePlayer.getHp() == 0) {// defense was defeated in combat. probably no double KOs 
+			if (defensePlayer.getHp() <= 0) {// defense was defeated in combat. probably no double KOs 
 				changeState(Constants.GSTATE_COMBAT_DEFEATED_SELECTREWARD);
 			} else {
 				changeState(Constants.GSTATE_ENDTURN);
@@ -1764,7 +1772,7 @@ package
 					
 					var tempPlayer:Player = attackPlayer;
 					attackPlayer = defensePlayer;
-					defensePlayer = attackPlayer; // switch who 'lost'
+					defensePlayer = tempPlayer; // switch who 'lost'
 					return; // end combat 
 				}
 			}
@@ -1774,7 +1782,20 @@ package
 		}
 		
 		private function update_combatSelectRewards(inputArray:Array):void {
-			if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED || defensePlayer.getItems().length == 0)
+			if (attackPlayer is Enemy) {
+				// TODO: for now enemies do not steal anything. also this code is duped from below
+				
+				// remove enemy or teleport away player
+				if (defensePlayer is Enemy) {
+					enemies.splice(enemies.indexOf(defensePlayer), 1);
+				} else {
+					defensePlayer.respawn();
+					defensePlayer.moveToSpace(getEmptySpaceOnBoard()); 
+				}
+
+				changeState(Constants.GSTATE_ENDTURN);
+			}
+			else if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED || defensePlayer.getItems().length == 0)
 			{
 				if (selectedSurrenderItem >= 0) {
 					var transferItem:BoardItem = defensePlayer.removeItem(selectedSurrenderItem);
