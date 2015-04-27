@@ -120,7 +120,8 @@ package
 		
 		public static var BOARD_SPRITES:Array;
 		public static var PLAYER_SPRITES:Array;
-			
+		public static var ENEMY_SPRITES:Array;
+		
 		public static function initGraphics():void
 		{
 			BOARD_SPRITES = [
@@ -134,6 +135,7 @@ package
 					];
 					
 			PLAYER_SPRITES = [new Image(SRC_TILE_PLAYER1), new Image(SRC_TILE_PLAYER2), new Image(SRC_TILE_PLAYER3), new Image(SRC_TILE_PLAYER4)];
+			ENEMY_SPRITES = [new Image(SRC_TILE_ENEMY)];
 		
 			DECK_BASE =	[
 			[[new Image(SRC_CARD_ATK_3), CARD_ATK, 3], 3],

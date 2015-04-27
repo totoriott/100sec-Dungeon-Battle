@@ -490,6 +490,10 @@ package
 		{
 			return pointsStr;
 		}
+		
+		public function getPlayerSprite():Image {
+			return Constants.PLAYER_SPRITES[getPlayerNumber()];
+		}
 	}
 
 }

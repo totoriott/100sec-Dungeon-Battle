@@ -14,6 +14,7 @@ package
 		public var deck:Vector.<BoardCard>;
 		public var players:Array = [];
 		public var board:Vector.<Vector.<BoardSpace>>;
+		public var enemies:Vector.<Enemy>;
 		
 		// TODO - scrolling view?
 		// TODO - reset these somewhere
@@ -56,6 +57,7 @@ package
 			
 			createNewDeck();
 			
+			enemies = new Vector.<Enemy>();
 			initBoard();
 			initPlayers();
 			
@@ -260,7 +262,7 @@ package
 			var col:int = -1;
 			var tries:int = 0;
 			
-			while (row < 0 || col < 0 || thisBoard[row][col].type != Constants.BOARD_EMPTY || isPlayerSpace(new BoardPosition(row, col)))
+			while (row < 0 || col < 0 || thisBoard[row][col].type != Constants.BOARD_EMPTY || isPlayerSpace(new BoardPosition(row, col)) || isEnemySpace(new BoardPosition(row, col)))
 			{
 				row = FP.rand(thisBoard.length);
 				col = FP.rand(thisBoard[0].length);
@@ -292,6 +294,20 @@ package
 			return false;
 		}
 		
+		// checks if you're colliding with an enemy
+		public function isEnemySpace(space:BoardPosition):Boolean
+		{
+			for (var i:int = 0; i < enemies.length; i++)
+			{
+				var enemy:Player = enemies[i];
+				var enemyPos:BoardPosition = enemy.getPosition();
+				if (space.row == enemyPos.row && space.col == enemyPos.col)
+					return true;
+			}
+			
+			return false;
+		}
+		
 		public function playerAtSpace(space:BoardPosition):Player
 		{
 			for (var i:int = 0; i < players.length; i++)
@@ -300,6 +316,27 @@ package
 				var playerPos:BoardPosition = player.getPosition();
 				if (space.row == playerPos.row && space.col == playerPos.col)
 					return player;
+			}
+			
+			return null;
+		}
+		
+		public function playerOrEnemyAtSpace(space:BoardPosition):Player
+		{
+			for (var i:int = 0; i < players.length; i++)
+			{
+				var player:Player = players[i];
+				var playerPos:BoardPosition = player.getPosition();
+				if (space.row == playerPos.row && space.col == playerPos.col)
+					return player;
+			}
+			
+			for (i = 0; i < enemies.length; i++)
+			{
+				var enemy:Player = enemies[i];
+				var enemyPos:BoardPosition = enemy.getPosition();
+				if (space.row == enemyPos.row && space.col == enemyPos.col)
+					return enemy;
 			}
 			
 			return null;
@@ -323,6 +360,8 @@ package
 				return false;
 			if (isPlayerSpace(space)) // can't move to where other players are
 				return false;
+			if (isEnemySpace(space)) 
+				return false;
 			
 			// can't move to invalid squares
 			var unmovableSpaces:Array = [Constants.BOARD_NULL];
@@ -331,6 +370,16 @@ package
 				if (getSpace(space.row,space.col).type == spaceType)
 					return false;
 			}
+
+			return true;
+		}
+		
+		public function isEmptySpace(space:BoardPosition):Boolean
+		{
+			if (!isMoveableSpace(space))
+				return false;
+			if (getSpace(space.row,space.col).type != Constants.BOARD_EMPTY)
+				return false;
 
 			return true;
 		}
@@ -429,6 +478,9 @@ package
 					break;
 					
 				case Constants.GSTATE_ENDTURN:
+					if (Math.random() < 0.5) { // TODO: change constant
+						addEnemyToBoard();
+					}
 					break;
 			}
 
@@ -598,9 +650,27 @@ package
 				playerPos.col -= startCol;
 				if (playerPos.row >= 0 && playerPos.row < viewRows) {
 					if (playerPos.col >= 0 && playerPos.col < viewCols) {
-						var playerSprite:Image = Constants.PLAYER_SPRITES[i];
+						var playerSprite:Image = players[i].getPlayerSprite();
 						playerSprite.alpha = boardAlpha;
 						Draw.graphic(playerSprite, boardX + playerPos.col * tileSize, boardY + playerPos.row * tileSize);
+					}
+				}
+			}
+			
+			// draw the enemies on the board
+			for (i = 0; i < enemies.length; i++)
+			{
+				var enemy:Player = enemies[i];
+				var enemyPos:BoardPosition = enemy.getPosition();
+				
+				// adjust for the viewport
+				enemyPos.row -= startRow;
+				enemyPos.col -= startCol;
+				if (enemyPos.row >= 0 && enemyPos.row < viewRows) {
+					if (enemyPos.col >= 0 && enemyPos.col < viewCols) {
+						var enemySprite:Image = enemies[i].getPlayerSprite();
+						enemySprite.alpha = boardAlpha;
+						Draw.graphic(enemySprite, boardX + enemyPos.col * tileSize, boardY + enemyPos.row * tileSize);
 					}
 				}
 			}
@@ -694,7 +764,7 @@ package
 				} 
 			} else if (gameStateIsCombat()) {				
 				// draw defender
-				playerSprite = Constants.PLAYER_SPRITES[defensePlayer.getPlayerNumber()];
+				playerSprite = defensePlayer.getPlayerSprite();
 				playerSprite.alpha = 1;
 				Draw.graphic(playerSprite, combatX, combatY);
 				combatY += 40;
@@ -776,7 +846,7 @@ package
 					combatY += 108;
 					
 					// draw attacker
-					playerSprite = Constants.PLAYER_SPRITES[attackPlayer.getPlayerNumber()];
+					playerSprite = attackPlayer.getPlayerSprite();
 					playerSprite.alpha = 1;
 					Draw.graphic(playerSprite, combatX, combatY);
 					combatY += 40;
@@ -1105,12 +1175,12 @@ package
 					var newSquare:BoardPosition = playerWalk[0];
 					playerWalk = playerWalk.slice(1, playerWalk.length);
 					
-					if (isPlayerSpace(newSquare)) { // you're moving onto someone 
+					if (isPlayerSpace(newSquare) || isEnemySpace(newSquare)) { // you're moving onto someone 
 						playerWalk = playerWalk.slice(0, 0); // stop moving
 						
 						// set up the attack. if it's still there after space resolution then fight
 						attackPlayer = players[playerTurn];
-						defensePlayer = playerAtSpace(newSquare);
+						defensePlayer = playerOrEnemyAtSpace(newSquare);
 					} else {
 						curPlayer.incrementStepsWalked(1);
 						curPlayer.moveToSpace(newSquare);
@@ -1466,7 +1536,7 @@ package
 				}
 				
 				// you're allowed to 'move' to another player to attack them, one space beyond what you can usually walk
-				if (isPlayerSpace(curSpace) && (curSpace.row != curPosition.row || curSpace.col != curPosition.col)) { 
+				if ((isPlayerSpace(curSpace) || isEnemySpace(curSpace)) && (curSpace.row != curPosition.row || curSpace.col != curPosition.col)) { 
 					markedSpaces[curSpace.row][curSpace.col] = curWalk.length;
 					playerPossibleWalks[curSpace.row][curSpace.col].push(curWalk);
 				}
@@ -1713,10 +1783,14 @@ package
 					queueOverlay(new OverlaySurrenderItem(defensePlayer, attackPlayer, transferItem.id, transferItem.fromThisBoard && transferItem.id == keyItemId, true));
 				}				
 				
-				// defense teleports away
-				defensePlayer.respawn();
-				defensePlayer.moveToSpace(getEmptySpaceOnBoard()); 
-				
+				// remove enemy or teleport away player
+				if (defensePlayer is Enemy) {
+					enemies.splice(enemies.indexOf(defensePlayer), 1);
+				} else {
+					defensePlayer.respawn();
+					defensePlayer.moveToSpace(getEmptySpaceOnBoard()); 
+				}
+
 				changeState(Constants.GSTATE_ENDTURN);
 			}
 			else if (inputArray[Constants.KEY_LEFT] == Constants.INPUT_PRESSED) {
@@ -1772,6 +1846,36 @@ package
 			}
 			
 			return textCache[key];
+		}
+		
+		public function addEnemyToBoard():void {
+			// enemies will spawn next to players if possible
+			var adjacentSpaces:Vector.<BoardPosition> = new Vector.<BoardPosition>();
+			var possibleSpawns:Vector.<BoardPosition> = new Vector.<BoardPosition>();
+			
+			for (var i:int = 0; i < players.length; i++) {
+				var curSpace:BoardPosition = (players[i] as Player).getPosition();
+				adjacentSpaces.push(new BoardPosition(curSpace.row - 1, curSpace.col));
+				adjacentSpaces.push(new BoardPosition(curSpace.row + 1, curSpace.col));
+				adjacentSpaces.push(new BoardPosition(curSpace.row, curSpace.col - 1));
+				adjacentSpaces.push(new BoardPosition(curSpace.row, curSpace.col + 1));
+			}
+			
+			for (i = 0; i < adjacentSpaces.length; i++) {
+				var theSpace:BoardPosition = adjacentSpaces[i];
+				if (isEmptySpace(theSpace)) {
+					possibleSpawns.push(theSpace);
+				}
+			}
+			
+			if (possibleSpawns.length > 0) {
+				FP.shuffle(possibleSpawns);
+				var enemySpace:BoardPosition = possibleSpawns[0];
+				
+				enemies.push(new Enemy( -1 * (enemies.length + 1), "Enemy", enemySpace, 0)); //TODO: enemy id // add the enemy
+			} else {
+				trace("No spaces adjacent to players to spawn an enemy!");
+			}
 		}
 	}
 }
