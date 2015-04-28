@@ -21,6 +21,11 @@ package
 		override public function getPlayerSprite():Image {
 			return Constants.ENEMY_SPRITES[0]; // TODO: more than one sprite?
 		}
+		
+		public function getSpaceToMoveTo(board:Board, possibleSpaces:Vector.<BoardPosition>):BoardPosition {
+			// TODO: enemies take turn after player, select enemy path from this space selection, do the thing
+			return possibleSpaces[0]; // TODO: more complex logic
+		}
 	}
 
 }

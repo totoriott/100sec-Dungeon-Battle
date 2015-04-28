@@ -386,6 +386,8 @@ package
 		
 		public function changeState(newState:int):void
 		{
+			var curPlayer:Player = getCurPlayer();
+			
 			switch (newState) // do any Enter State logic
 			{
 				case Constants.GSTATE_STARTTURN:
@@ -394,14 +396,13 @@ package
 					if (playerTurn >= players.length)
 						playerTurn = 0;
 					
-					var curPlayer:Player = players[playerTurn];
 					curPlayer.prepareForTurn();
 						
 					// give them a card if there is one and they need one
-					var cards:Vector.<BoardCard> = players[playerTurn].getCards();
+					var cards:Vector.<BoardCard> = curPlayer.getCards();
 					if (cards.length < Constants.HAND_CARD_LIMIT && deck.length > 0)
 					{
-						players[playerTurn].giveCard(dealCardFromDeck());
+						curPlayer.giveCard(dealCardFromDeck());
 					}
 					
 					playerPossibleWalks = new Vector.<Vector.<Vector.<Vector.<BoardPosition>>>>(board.length, true);
@@ -423,12 +424,11 @@ package
 					// use the card selected, if one was picked
 					if (cardIndex >= 0)
 					{
-						players[playerTurn].activateCardOnBoard(cardIndex);
+						curPlayer.activateCardOnBoard(cardIndex);
 					}
 					
 					//state-specific stuff
 					playerWalk = new Vector.<BoardPosition>(); // the squares the current player is walking this turn
-					curPlayer = players[playerTurn];
 					var playerRoll:int = curPlayer.doMovementRoll();
 					
 					playerPossibleMoves = getPlayerPossibleMoves(); // the squares the current player could move to this turn
@@ -1003,9 +1003,9 @@ package
 		// handles updating for the game state where the player is picking what card to play when moving around the board
 		private function update_playerCard(inputArray:Array):void
 		{
-			var curPlayer:Player = players[playerTurn];
+			var curPlayer:Player = getCurPlayer();
 			
-			var cards:Vector.<BoardCard> = players[playerTurn].getCards();
+			var cards:Vector.<BoardCard> = curPlayer.getCards();
 			
 			if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED) // select a card
 			{
@@ -1046,7 +1046,7 @@ package
 		
 		private function update_doRoll(inputArray:Array):void
 		{
-			var curPlayer:Player = players[playerTurn];
+			var curPlayer:Player = getCurPlayer();
 			var playerCard:BoardCard = curPlayer.getActivatedCardBoard();
 			if (playerCard != null) {
 				// if it was an exit card
@@ -1081,10 +1081,10 @@ package
 				return;
 			}
 			
-			var curPlayer:Player = players[playerTurn];
+			var curPlayer:Player = getCurPlayer();
 			var newSquareSelected:Boolean = true;
 			var newSquare:BoardPosition = new BoardPosition(-99, -99); // the square which we will start moving from
-			var playerSpace:BoardPosition = players[playerTurn].getPosition();
+			var playerSpace:BoardPosition = curPlayer.getPosition();
 			if (playerWalk.length == 0)
 				newSquare = playerSpace;
 			else
@@ -1171,7 +1171,7 @@ package
 				}
 				else
 				{
-					var curPlayer:Player = players[playerTurn];
+					var curPlayer:Player = getCurPlayer();
 					var newSquare:BoardPosition = playerWalk[0];
 					playerWalk = playerWalk.slice(1, playerWalk.length);
 					
@@ -1179,7 +1179,7 @@ package
 						playerWalk = playerWalk.slice(0, 0); // stop moving
 						
 						// set up the attack. if it's still there after space resolution then fight
-						attackPlayer = players[playerTurn];
+						attackPlayer = curPlayer;
 						defensePlayer = playerOrEnemyAtSpace(newSquare);
 					} else {
 						curPlayer.incrementStepsWalked(1);
@@ -1210,8 +1210,8 @@ package
 			
 			// no messing with the camera here
 			
-			var curPlayer:Player = players[playerTurn];
-			var playerPos:BoardPosition = players[playerTurn].getPosition();
+			var curPlayer:Player = getCurPlayer();
+			var playerPos:BoardPosition = curPlayer.getPosition();
 			var space:BoardSpace = getSpace(playerPos.row, playerPos.col).deepCopy();
 			
 			switch (space.type)
@@ -1257,7 +1257,7 @@ package
 					break;
 					
 				case Constants.BOARD_EXIT:
-					if (playerHasKeyItem(players[playerTurn])) {
+					if (playerHasKeyItem(curPlayer)) {
 						// TODO: you win!!
 						changeState(Constants.GSTATE_GAMEOVER); // TODO: end of game things
 						playerTurn = -1;
@@ -1265,7 +1265,7 @@ package
 					}
 					
 					// if you don't have the key item, jump to a random location
-					players[playerTurn].moveToSpace(getEmptySpaceOnBoard()); 
+					curPlayer.moveToSpace(getEmptySpaceOnBoard()); 
 					break;
 			}
 			
@@ -1428,7 +1428,7 @@ package
 		private function update_endTurn(inputArray:Array):void
 		{
 			// do end of turn cleanup
-			var curPlayer:Player = players[playerTurn];
+			var curPlayer:Player = getCurPlayer();
 			curPlayer.finishTurn();
 			
 			changeState(Constants.GSTATE_STARTTURN);
@@ -1461,7 +1461,7 @@ package
 		}
 		
 		private function getPlayerPossibleMoves():Vector.<BoardPosition> {
-			var curPlayer:Player = players[playerTurn];
+			var curPlayer:Player = getCurPlayer();
 			var curPosition:BoardPosition = curPlayer.getPosition();
 			var playerRoll:int = curPlayer.getMovementRollValue(); 
 			
@@ -1830,7 +1830,7 @@ package
 		
 		private function update_doRest(inputArray:Array):void
 		{
-			var curPlayer:Player = players[playerTurn];
+			var curPlayer:Player = getCurPlayer();
 			
 			// TODO: technically if you're emptied you have a turn whre you don't gain cards
 			
@@ -1897,6 +1897,10 @@ package
 			} else {
 				trace("No spaces adjacent to players to spawn an enemy!");
 			}
+		}
+		
+		public function getCurPlayer():Player {
+			return players[playerTurn];
 		}
 	}
 }
