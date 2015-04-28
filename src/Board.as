@@ -47,6 +47,8 @@ package
 		public var overlaysQueue:Vector.<GraphicOverlay>;		
 		protected var textCache:Dictionary;
 		
+		private var renderTimers:Dictionary; // a collection of timers for making things glow or fade in/out etc
+		
 		public function Board() 
 		{
 			initNewGame();
@@ -55,6 +57,7 @@ package
 		public function initNewGame():void
 		{
 			textCache = null; // clear the text cache
+			renderTimers = new Dictionary();
 			
 			createNewDeck();
 			
@@ -426,6 +429,8 @@ package
 					playerWalk = new Vector.<BoardPosition>();
 					attackPlayer = null;
 					defensePlayer = null;
+					
+					startRenderTimer(Constants.RENDER_PLAYERGLOW);
 					break;
 					
 				case Constants.GSTATE_SELECTACTION:
@@ -603,6 +608,7 @@ package
 		override public function render():void
 		{
 			super.render();
+			incrementRenderTimers();
 			
 			// TODO - optimize the hell out of everything
 			
@@ -655,6 +661,9 @@ package
 				Draw.rect(vertX, vertY, vertWidth, scrollbarSize, 0x444444, boardAlpha);
 			}
 			
+			var spaceGlowAlphaMultiplier:Number = 0.25 + Math.abs(Math.sin(Math.PI / 180 * getRenderTimer(Constants.RENDER_PLAYERGLOW) * 3)) * 0.5;
+			var spaceGlowAlphaMultiplier2:Number = 0.5 + Math.abs(Math.sin(Math.PI / 180 * getRenderTimer(Constants.RENDER_PLAYERGLOW) * 3)) * 0.5;
+			
 			// draw the players on the board
 			for (i = 0; i < players.length; i++)
 			{
@@ -668,7 +677,12 @@ package
 					if (playerPos.col >= 0 && playerPos.col < viewCols) {
 						var playerSprite:Image = players[i].getPlayerSprite();
 						playerSprite.alpha = boardAlpha;
-						Draw.graphic(playerSprite, boardX + playerPos.col * tileSize, boardY + playerPos.row * tileSize);
+						var thisPlayerX:int = boardX + playerPos.col * tileSize;
+						var thisPlayerY:int = boardY + playerPos.row * tileSize;
+						if (i == playerTurn && !gameStateIsCombat()) { // draw a glow behind player if your turn
+							Draw.circlePlus(thisPlayerX + playerSprite.width / 2, thisPlayerY + playerSprite.height / 2, playerSprite.width, 0xFFFF00, spaceGlowAlphaMultiplier, true, 1);
+						}
+						Draw.graphic(playerSprite, thisPlayerX, thisPlayerY);
 					}
 				}
 			}
@@ -686,7 +700,12 @@ package
 					if (enemyPos.col >= 0 && enemyPos.col < viewCols) {
 						var enemySprite:Image = enemies[i].getPlayerSprite();
 						enemySprite.alpha = boardAlpha;
-						Draw.graphic(enemySprite, boardX + enemyPos.col * tileSize, boardY + enemyPos.row * tileSize);
+						thisPlayerX = boardX + enemyPos.col * tileSize;
+						thisPlayerY = boardY + enemyPos.row * tileSize;
+						if (enemy == getCurPlayer() && !gameStateIsCombat()) { // draw a glow behind player if your turn
+							Draw.circlePlus(thisPlayerX + enemySprite.width / 2, thisPlayerY + enemySprite.height / 2, enemySprite.width, 0xFFFF00, spaceGlowAlphaMultiplier, true, 1);
+						}
+						Draw.graphic(enemySprite, thisPlayerX, thisPlayerY);
 					}
 				}
 			}
@@ -699,9 +718,10 @@ package
 				// adjust for the viewport
 				spaceCopy.row -= startRow;
 				spaceCopy.col -= startCol;
+				
 				if (spaceCopy.row >= 0 && spaceCopy.row < viewRows)
 					if (spaceCopy.col >= 0 && spaceCopy.col < viewCols)
-						Draw.rect(boardX + spaceCopy.col * tileSize, boardY + spaceCopy.row * tileSize, tileSize, tileSize, 0x0000FF, 0.25 * boardAlpha);
+						Draw.rect(boardX + spaceCopy.col * tileSize, boardY + spaceCopy.row * tileSize, tileSize, tileSize, 0x0000FF, 0.25 * boardAlpha * spaceGlowAlphaMultiplier2);
 			}
 			
 			for each (space in playerWalk) // draw the path the player is walking
@@ -1952,6 +1972,27 @@ package
 		
 		public function isEnemyTurn():Boolean {
 			return (getCurPlayer() is Enemy);
+		}
+		
+		// render timer functions
+		public function startRenderTimer(key:String):void {
+			renderTimers[key] = 0;
+		}
+		
+		public function incrementRenderTimers():void {
+			for (var key:String in renderTimers) {
+				var value:int = renderTimers[key];
+				renderTimers[key] = value + 1;
+			}
+		}
+		
+		public function getRenderTimer(key:String):int {
+			if (renderTimers[key] == null) {
+				trace(key + " not found in render timers list!");
+				return 0; 
+			}
+			
+			return renderTimers[key];
 		}
 	}
 }

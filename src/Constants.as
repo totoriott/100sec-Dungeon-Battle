@@ -304,6 +304,9 @@ package
 				new Image(SRC_OVERLAY_FLAG4), new Image(SRC_OVERLAY_FLAG5), new Image(SRC_OVERLAY_FLAG6)];
 		}
 		
+		// Render timers
+		public static var RENDER_PLAYERGLOW:String = "renderPlayerGlow";
+		
 		public static function graphicsAnimationPercentFromTiming(time:int, fadeInStart:int, inDuration:int, fadeOutStart:int, outDuration:int):Number {
 			var alpha:Number = 0;
 			if (time >= fadeInStart && time - fadeInStart < inDuration) {

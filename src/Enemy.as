@@ -28,7 +28,7 @@ package
 			
 			for (var i:int = 0; i < spaces.length; i++) {
 				var space:BoardPosition = spaces[i];
-				if (board.isPlayerSpace(space) && Math.random() > 0.33) { //usually attack a player if you can
+				if (board.isPlayerSpace(space) && Math.random() < 0.33) { //usually attack a player if you can
 					return space;
 				}
 			}
