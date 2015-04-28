@@ -15,6 +15,7 @@ package
 		public var players:Array = [];
 		public var board:Vector.<Vector.<BoardSpace>>;
 		public var enemies:Vector.<Enemy>;
+		public var enemiesToAct:Vector.<Enemy>; // shallow clone of enemies, hopefully, for turn resolution (TODO: confirm shallow clone)
 		
 		// TODO - scrolling view?
 		// TODO - reset these somewhere
@@ -26,7 +27,7 @@ package
 		private var gameState:int = Constants.GSTATE_GAMEOVER;
 		private var playerHudType:int = Constants.PLAYERHUD_TYPE_CARDS;
 		
-		private var playerTurn:int = 0; // which player's turn it is
+		private var playerTurn:int = -999; // which player's turn it is
 		private var exitSpace:BoardPosition; // where is the exit
 		private var keyItemId:int = 0; // which boarditem ID is the key item to win
 		
@@ -392,17 +393,32 @@ package
 			{
 				case Constants.GSTATE_STARTTURN:
 					// "NEXT TURN"
-					playerTurn++;
-					if (playerTurn >= players.length)
-						playerTurn = 0;
+					if (playerTurn >= 0) { // if human
+						playerTurn++;
+					}
 					
+					if (playerTurn >= players.length) {
+						playerTurn = -1; // handle enemies now
+						enemiesToAct = new Vector.<Enemy>();
+						for (var k:int = 0; k < enemies.length; k++) {
+							enemiesToAct.push(enemies[k]);
+						}
+					}
+					
+					if (playerTurn == -1 && enemiesToAct.length == 0) { // once enemies are done acting
+						playerTurn = 0;
+					}
+					
+					curPlayer = getCurPlayer();
 					curPlayer.prepareForTurn();
 						
 					// give them a card if there is one and they need one
-					var cards:Vector.<BoardCard> = curPlayer.getCards();
-					if (cards.length < Constants.HAND_CARD_LIMIT && deck.length > 0)
-					{
-						curPlayer.giveCard(dealCardFromDeck());
+					if (!isEnemyTurn()) { // only players get cards
+						var cards:Vector.<BoardCard> = curPlayer.getCards();
+						if (cards.length < Constants.HAND_CARD_LIMIT && deck.length > 0)
+						{
+							curPlayer.giveCard(dealCardFromDeck());
+						}
 					}
 					
 					playerPossibleWalks = new Vector.<Vector.<Vector.<Vector.<BoardPosition>>>>(board.length, true);
@@ -478,7 +494,7 @@ package
 					break;
 					
 				case Constants.GSTATE_ENDTURN:
-					if (Math.random() < 0.5) { // TODO: change constant
+					if (Math.random() < 0.2 && !isEnemyTurn()) { // TODO: change constant
 						addEnemyToBoard();
 					}
 					break;
@@ -1007,7 +1023,10 @@ package
 			
 			var cards:Vector.<BoardCard> = curPlayer.getCards();
 			
-			if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED) // select a card
+			if (isEnemyTurn()) {
+				changeState(Constants.GSTATE_DOROLL);
+			}
+			else if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED) // select a card
 			{
 				if (cardIndex == cards.length) {
 					changeState(Constants.GSTATE_DOREST);
@@ -1075,6 +1094,13 @@ package
 		// handles updating for the game state where the player is deciding where to move
 		private function update_playerMove(inputArray:Array):void
 		{			
+			if (isEnemyTurn()) {
+				var chosenSpace:BoardPosition = (getCurPlayer() as Enemy).getSpaceToMoveTo(this, playerPossibleMoves);
+				 // TODO: enemies activating traps??? uh also enemies should only go to blank spaces. right now i'm going to call this a 'feature'
+				playerWalk = playerPossibleWalks[chosenSpace.row][chosenSpace.col][0]; // we assume first walk
+				changeState(Constants.GSTATE_MOVING);
+				return;
+			}
 			if (inputArray[Constants.KEY_FIRE3] == Constants.INPUT_DOWN) // if we're holding down the camera button
 			{
 				update_moveCamera(inputArray);
@@ -1260,7 +1286,7 @@ package
 					if (playerHasKeyItem(curPlayer)) {
 						// TODO: you win!!
 						changeState(Constants.GSTATE_GAMEOVER); // TODO: end of game things
-						playerTurn = -1;
+						playerTurn = -999;
 						return;
 					}
 					
@@ -1379,7 +1405,11 @@ package
 		
 		private function update_combatOffenseSelectCard(inputArray:Array):void {
 			// select what offense card will be used
-			if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED)
+			if (attackPlayer is Enemy) {
+				selectedAttackCard = -1;
+				changeState(Constants.GSTATE_COMBAT_RESOLVE);
+			} 
+			else if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED)
 			{
 				changeState(Constants.GSTATE_COMBAT_RESOLVE);
 			}
@@ -1430,6 +1460,10 @@ package
 			// do end of turn cleanup
 			var curPlayer:Player = getCurPlayer();
 			curPlayer.finishTurn();
+			
+			if (isEnemyTurn()) {
+				enemiesToAct.splice(0, 1); // this enemy is done acting
+			}		
 			
 			changeState(Constants.GSTATE_STARTTURN);
 		}
@@ -1793,6 +1827,10 @@ package
 					defensePlayer.moveToSpace(getEmptySpaceOnBoard()); 
 				}
 
+				
+				attackPlayer.initUX();
+				defensePlayer.initUX(); // TODO: can we do this nicer, somewhere
+				
 				changeState(Constants.GSTATE_ENDTURN);
 			}
 			else if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED || defensePlayer.getItems().length == 0)
@@ -1893,14 +1931,27 @@ package
 				FP.shuffle(possibleSpawns);
 				var enemySpace:BoardPosition = possibleSpawns[0];
 				
-				enemies.push(new Enemy( -1 * (enemies.length + 1), "Enemy", enemySpace, 0)); //TODO: enemy id // add the enemy
+				enemies.push(new Enemy( -1 * (enemies.length + 1), "Enemy " + enemies.length, enemySpace, 0)); //TODO: enemy id // add the enemy
 			} else {
 				trace("No spaces adjacent to players to spawn an enemy!");
 			}
 		}
 		
 		public function getCurPlayer():Player {
-			return players[playerTurn];
+			if (playerTurn == -999) {
+				return null;
+			} else if (playerTurn == -1) { // resolving enemies
+				if (enemiesToAct.length > 0) {
+					return enemiesToAct[0];
+				}
+				return null;
+			} else {
+				return players[playerTurn];
+			}
+		}
+		
+		public function isEnemyTurn():Boolean {
+			return (getCurPlayer() is Enemy);
 		}
 	}
 }

@@ -23,8 +23,16 @@ package
 		}
 		
 		public function getSpaceToMoveTo(board:Board, possibleSpaces:Vector.<BoardPosition>):BoardPosition {
-			// TODO: enemies take turn after player, select enemy path from this space selection, do the thing
-			return possibleSpaces[0]; // TODO: more complex logic
+			var spaces:Vector.<BoardPosition> = Constants.deepCopyBoardPositionVector(possibleSpaces);
+			FP.shuffle(spaces);
+			
+			for (var i:int = 0; i < spaces.length; i++) {
+				var space:BoardPosition = spaces[i];
+				if (board.isPlayerSpace(space) && Math.random() > 0.33) { //usually attack a player if you can
+					return space;
+				}
+			}
+			return spaces[0]; // TODO: more complex logic
 		}
 	}
 
