@@ -11,7 +11,7 @@ package
 		internal var playerNumber:int = -1;
 		
 		internal var level:int = 1;
-		internal var skillPoints:Array = [14, 2, 3, 3];
+		protected var skillPoints:Array = [14, 2, 3, 3];
 		
 		internal var name:String = "Nameless"; // TODO - funny default name
 		internal var hp:int = 10;
@@ -56,13 +56,17 @@ package
 			playerNumber = number;
 			name = mName;
 			position = mPosition.deepCopy();
+			initSelf();
+		}		
+		
+		public function initSelf():void {
 			hand = new Vector.<BoardCard>();
 			items = new Vector.<BoardItem>();
 			
 			maxHp = (skillPoints[Constants.SKILL_HP] * 3) + 7;
 			
 			initUX();
-		}		
+		}
 		
 		public function getPlayerNumber():int {
 			return playerNumber;

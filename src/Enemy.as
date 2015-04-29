@@ -14,8 +14,10 @@ package
 	{
 		public function Enemy(mId:int, mName:String, mPosition:BoardPosition, mEnemyId:int) 
 		{
-			skillPoints = [0,0,0,0]; // TODO: temporary
 			super(mId, mName, mPosition);
+			
+			skillPoints = [0, 0, 0, 0]; // TODO: temporary
+			initSelf();
 		}
 		
 		override public function getPlayerSprite():Image {
