@@ -118,6 +118,10 @@ package
 					maxPlayerLevel = newPlayer.level;
 				}
 				
+				newPlayer.giveTreasureWithId(FP.choose(Constants.TREASURE_DB)[0]);
+				newPlayer.giveTreasureWithId(FP.choose(Constants.TREASURE_DB)[0]);
+				newPlayer.giveTreasureWithId(FP.choose(Constants.TREASURE_DB)[0]);
+				newPlayer.giveTreasureWithId(FP.choose(Constants.TREASURE_DB)[0]);
 				players.push(newPlayer);
 			}
 			
@@ -230,7 +234,7 @@ package
 				while (allTreasureIdsOnBoard.indexOf(randomTreasureId) != -1) {
 					randomTreasureId = FP.choose(Constants.TREASURE_DB)[0];
 				}
-				allTreasureIdsOnBoard.push(randomTreasureId);
+				allTreasureIdsOnBoard.push(randomTreasureId);	
 				
 				if (i == 0) {
 					keyItemId = randomTreasureId;
@@ -1334,6 +1338,7 @@ package
 						// TODO: you win!!
 						changeState(Constants.GSTATE_GAMEOVER); // TODO: end of game things
 						playerTurn = -999;
+						queueOverlay(new OverlayEndGame(players));
 						return;
 					}
 					
@@ -1790,7 +1795,7 @@ package
 				
 				// defense teleports away
 				teleportPlayer = defensePlayer;
-				changeState(Constants.GSTATE_TELEPORTPLAYER);
+				changeState(Constants.GSTATE_TELEPORTPLAYER); // TODO: this is broken whoops
 				
 				queueOverlay(new OverlaySurrenderItem(defensePlayer, attackPlayer, transferItem.id, transferItem.fromThisBoard && transferItem.id == keyItemId, false));
 				return; // end combat

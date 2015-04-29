@@ -455,13 +455,25 @@ package
 			totalPoints += damageGiven * Constants.POINTS_PER_ATTACK_DAMAGE;
 			totalPoints += enemiesKOed * Constants.POINTS_PER_KO;
 			totalPoints += flagPoints;
+			totalPoints += getItemPoints();
+			return totalPoints;
+		}
+		
+		public function getItemPoints():int {
+			var totalPoints:int = 0;
 			for (var i:int = 0; i < items.length; i++) {
 				var item:BoardItem = items[i];
 				if (item.fromThisBoard) {
-					totalPoints += item.pointValue;
+					totalPoints += item.pointValue; // TODO: how to make key item worth 5000
 				}
 			}
 			return totalPoints;
+		}
+		
+		// make sure this is in sync with overlay end game
+		public function getScoreArray():Array {
+			return [handicapLevels * Constants.POINTS_PER_HANDICAP_LEVEL, stepsWalked * Constants.POINTS_PER_STEP,
+				damageGiven * Constants.POINTS_PER_ATTACK_DAMAGE + enemiesKOed * Constants.POINTS_PER_KO, flagPoints, getItemPoints(), calculateTotalPoints()];
 		}
 		
 		// UX things
