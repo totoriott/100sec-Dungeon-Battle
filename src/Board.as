@@ -1951,7 +1951,8 @@ package
 				FP.shuffle(possibleSpawns);
 				var enemySpace:BoardPosition = possibleSpawns[0];
 				
-				enemies.push(new Enemy( -1 * (enemies.length + 1), "Enemy " + enemies.length, enemySpace, 0)); //TODO: enemy id // add the enemy
+				var enemyId:int = Math.floor(Math.random() * Constants.ENEMY_DB.length); // generate random enemy ID
+				enemies.push(new Enemy( -1 * (enemies.length + 1), enemySpace, enemyId)); // add the enemy
 			} else {
 				trace("No spaces adjacent to players to spawn an enemy!");
 			}

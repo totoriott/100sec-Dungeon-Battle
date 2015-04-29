@@ -12,11 +12,12 @@ package
 	 */
 	public class Enemy extends Player 
 	{
-		public function Enemy(mId:int, mName:String, mPosition:BoardPosition, mEnemyId:int) 
+		public function Enemy(mId:int, mPosition:BoardPosition, mEnemyId:int) 
 		{
-			super(mId, mName, mPosition);
+			var enemyInfo:Array = Constants.ENEMY_DB[mEnemyId];
+			super(mId, enemyInfo[1], mPosition);
 			
-			skillPoints = [0, 0, 0, 0]; // TODO: temporary
+			skillPoints = enemyInfo[2];
 			initSelf();
 		}
 		

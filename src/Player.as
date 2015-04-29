@@ -63,7 +63,10 @@ package
 			hand = new Vector.<BoardCard>();
 			items = new Vector.<BoardItem>();
 			
-			maxHp = (skillPoints[Constants.SKILL_HP] * 3) + 7;
+			maxHp = (skillPoints[Constants.SKILL_HP] * 3) + 10;
+			
+			var initString:String = "Initialized " + name + " with " + getAttack() + " attack, " + getDefense() + " defense, " + getMoveBonus() + " move, and " + getMaxHp() + " HP.";
+			trace(initString);
 			
 			initUX();
 		}

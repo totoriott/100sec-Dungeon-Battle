@@ -12,6 +12,7 @@ package
 			Constants.initGraphics();
 			Constants.initCombatGraphics();
 			Constants.initTreasureDb();
+			Constants.initEnemyDb();
 			Constants.initOverlayGraphics();
 			
 			FP.world = new WorldGameplay;

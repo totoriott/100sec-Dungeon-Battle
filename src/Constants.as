@@ -264,6 +264,18 @@ package
 			];
 		}
 		
+		public static var ENEMY_DB:Array;
+		
+		public static function initEnemyDb():void {
+			// id, name, stats
+			ENEMY_DB = [
+				[0, "Scout",		[0,0,6,0]],
+				[1, "Soldier",		[0,4,0,0]],
+				[2, "Fighter",		[5,0,0,0]],
+				[3, "Giant",		[0,0,0,6]],
+			];
+		}
+		
 		// Combat constants
 		[Embed(source = 'assets/img/combat/counter.png')] private static const SRC_COMBAT_COUNTER:Class;
 		[Embed(source = 'assets/img/combat/guard.png')] private static const SRC_COMBAT_GUARD:Class;
