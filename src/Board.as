@@ -85,7 +85,6 @@ package
 		{
 			deck = new Vector.<BoardCard>();
 			
-			// TODO - make the card class less BS please
 			for each (var cardData:Array in Constants.DECK_BASE)
 			{
 				for (var i:int = 0; i < cardData[Constants.DECK_CARD_COUNT]; i++) {
@@ -457,7 +456,7 @@ package
 					
 					playerPossibleMoves = getPlayerPossibleMoves(); // the squares the current player could move to this turn
 					
-					queueOverlay(curPlayer.createMovementRollOverlay()); // TODO: pass it a roll
+					queueOverlay(curPlayer.createMovementRollOverlay());
 					break;
 					
 				case Constants.GSTATE_SELECTMOVE:
@@ -1067,11 +1066,11 @@ package
 		}
 		
 		private function update_startTurn(inputArray:Array):void {
-			changeState(Constants.GSTATE_SELECTACTION); // TODO: this state
+			changeState(Constants.GSTATE_SELECTACTION); // we don't have any start-turn stuff right now so it's cool
 		}
 		
 		private function update_selectAction(inputArray:Array):void {
-			changeState(Constants.GSTATE_SELECTCARD); // TODO: this state
+			changeState(Constants.GSTATE_SELECTCARD); // selecting actions is done by choosing a card for now
 		}
 		
 		// handles updating for the game state where the player is picking what card to play when moving around the board
@@ -1290,8 +1289,6 @@ package
 		// handles updating for when the player is landing on a space and making a thing happen
 		private function update_activateSpace(inputArray:Array):void
 		{
-			// TODO: maybe jump some of these to discrete states rather than instantaneous effects
-			
 			// no messing with the camera here
 			
 			var curPlayer:Player = getCurPlayer();
@@ -1309,7 +1306,6 @@ package
 					
 				case Constants.BOARD_BOX:
 					var treasureId:int = space.value;
-					// TODO: check if it's key treasure and do things
 					curPlayer.giveTreasureWithId(treasureId);					
 					board[playerPos.row][playerPos.col].changeTo(Constants.BOARD_EMPTY, 0); // empty out the space
 					

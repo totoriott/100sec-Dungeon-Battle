@@ -64,6 +64,7 @@ package
 			items = new Vector.<BoardItem>();
 			
 			maxHp = (skillPoints[Constants.SKILL_HP] * 3) + 10;
+			hp = maxHp;
 			
 			var initString:String = "Initialized " + name + " with " + getAttack() + " attack, " + getDefense() + " defense, " + getMoveBonus() + " move, and " + getMaxHp() + " HP.";
 			trace(initString);
