@@ -8,6 +8,7 @@ package
 	import net.flashpunk.graphics.Image;
 	import net.flashpunk.graphics.Text;
 	import net.flashpunk.utils.*;
+	import flash.geom.Point;
 	
 	public class Board extends Entity
 	{
@@ -23,6 +24,9 @@ package
 		private var startCol:int = 0;
 		private var viewRows:int = 14;
 		private var viewCols:int = 14;
+		private var boardX:int = 16;
+		private var boardY:int = 16;
+		private var tileSize:int = 32; // TODO - make this less fragile
 		
 		private var gameState:int = Constants.GSTATE_GAMEOVER;
 		private var playerHudType:int = Constants.PLAYERHUD_TYPE_CARDS;
@@ -619,6 +623,45 @@ package
 			}
 		}
 		
+		public function renderPlayerOnBoard(player:Player, boardAlpha:Number, isCurrentPlayer:Boolean):void {
+			var playerPos:BoardPosition = player.getPosition();
+			var spaceGlowAlphaMultiplier:Number = 0.25 + Math.abs(Math.sin(Math.PI / 180 * getRenderTimer(Constants.RENDER_PLAYERGLOW) * 3)) * 0.5;
+			
+			// adjust for the viewport
+			playerPos.row -= startRow;
+			playerPos.col -= startCol;
+			if (playerPos.row >= 0 && playerPos.row < viewRows) {
+				if (playerPos.col >= 0 && playerPos.col < viewCols) {
+					var playerSprite:Image = player.getPlayerSprite();
+					playerSprite.alpha = boardAlpha;
+					var thisPlayerX:int = boardX + playerPos.col * tileSize;
+					var thisPlayerY:int = boardY + playerPos.row * tileSize;
+					if (isCurrentPlayer) { // draw a glow behind player if your turn
+						Draw.circlePlus(thisPlayerX + playerSprite.width / 2, thisPlayerY + playerSprite.height / 2, playerSprite.width, 0xFFFF00, spaceGlowAlphaMultiplier, true, 1);
+					}
+					Draw.graphic(playerSprite, thisPlayerX, thisPlayerY);
+				}
+			}
+		}
+		
+		public function getXYCoordForPositionOnBoard(position:BoardPosition):Point {
+			// adjust for the viewport
+			position.row -= startRow;
+			position.col -= startCol;
+			var x:int = boardX + position.col * tileSize;
+			var y:int = boardY + position.row * tileSize;
+			return new Point(x, y);
+		}
+		
+		public function positionIsOnVisibleBoard(position:BoardPosition):Boolean {
+			if (position.row >= 0 && position.row < viewRows) {
+				if (position.col >= 0 && position.col < viewCols) {
+					return true;
+				}
+			}
+			return false;
+		}
+		
 		override public function render():void
 		{
 			super.render();
@@ -637,10 +680,6 @@ package
 			if (gameStateIsCombat()) { // dim the board if combat is happening
 				boardAlpha = 0.2;
 			}
-			
-			var boardX:int = 16;
-			var boardY:int = 16;
-			var tileSize:int = 32; // TODO - make this less fragile
 			
 			for (var i:int = startRow; i < startRow + viewRows; i++)
 			{
@@ -678,53 +717,18 @@ package
 				Draw.rect(vertX, vertY, vertWidth, scrollbarSize, 0x444444, boardAlpha);
 			}
 			
-			var spaceGlowAlphaMultiplier:Number = 0.25 + Math.abs(Math.sin(Math.PI / 180 * getRenderTimer(Constants.RENDER_PLAYERGLOW) * 3)) * 0.5;
 			var spaceGlowAlphaMultiplier2:Number = 0.5 + Math.abs(Math.sin(Math.PI / 180 * getRenderTimer(Constants.RENDER_PLAYERGLOW) * 3)) * 0.5;
 			
 			// draw the players on the board
 			for (i = 0; i < players.length; i++)
 			{
-				var player:Player = players[i];
-				var playerPos:BoardPosition = player.getPosition();
-				
-				// adjust for the viewport
-				playerPos.row -= startRow;
-				playerPos.col -= startCol;
-				if (playerPos.row >= 0 && playerPos.row < viewRows) {
-					if (playerPos.col >= 0 && playerPos.col < viewCols) {
-						var playerSprite:Image = players[i].getPlayerSprite();
-						playerSprite.alpha = boardAlpha;
-						var thisPlayerX:int = boardX + playerPos.col * tileSize;
-						var thisPlayerY:int = boardY + playerPos.row * tileSize;
-						if (i == playerTurn && !gameStateIsCombat()) { // draw a glow behind player if your turn
-							Draw.circlePlus(thisPlayerX + playerSprite.width / 2, thisPlayerY + playerSprite.height / 2, playerSprite.width, 0xFFFF00, spaceGlowAlphaMultiplier, true, 1);
-						}
-						Draw.graphic(playerSprite, thisPlayerX, thisPlayerY);
-					}
-				}
+				renderPlayerOnBoard(players[i], boardAlpha, i == playerTurn && !gameStateIsCombat());
 			}
 			
 			// draw the enemies on the board
 			for (i = 0; i < enemies.length; i++)
 			{
-				var enemy:Player = enemies[i];
-				var enemyPos:BoardPosition = enemy.getPosition();
-				
-				// adjust for the viewport
-				enemyPos.row -= startRow;
-				enemyPos.col -= startCol;
-				if (enemyPos.row >= 0 && enemyPos.row < viewRows) {
-					if (enemyPos.col >= 0 && enemyPos.col < viewCols) {
-						var enemySprite:Image = enemies[i].getPlayerSprite();
-						enemySprite.alpha = boardAlpha;
-						thisPlayerX = boardX + enemyPos.col * tileSize;
-						thisPlayerY = boardY + enemyPos.row * tileSize;
-						if (enemy == getCurPlayer() && !gameStateIsCombat()) { // draw a glow behind player if your turn
-							Draw.circlePlus(thisPlayerX + enemySprite.width / 2, thisPlayerY + enemySprite.height / 2, enemySprite.width, 0xFFFF00, spaceGlowAlphaMultiplier, true, 1);
-						}
-						Draw.graphic(enemySprite, thisPlayerX, thisPlayerY);
-					}
-				}
+				renderPlayerOnBoard(enemies[i], boardAlpha, enemies[i] == getCurPlayer() && !gameStateIsCombat());
 			}
 			
 			// draw the teleport highlight
@@ -732,48 +736,37 @@ package
 				var telePos:BoardPosition = teleportPlayer.getPosition();
 				var teleportTimer:int = getRenderTimer(Constants.RENDER_TELEPORTPLAYER);
 
-				// adjust for the viewport
-				telePos.row -= startRow;
-				telePos.col -= startCol;
-				if (telePos.row >= 0 && telePos.row < viewRows) {
-					if (telePos.col >= 0 &&telePos.col < viewCols) {
-						var teleSprite:Image = teleportPlayer.getPlayerSprite();
-						teleSprite.alpha = boardAlpha;
-						var teleX:int = boardX + telePos.col * tileSize;
-						var teleY:int = boardY + telePos.row * tileSize;
-						var teleRadius:Number = teleSprite.width * 2 * Math.sin(Math.PI / 180 * teleportTimer * 180 / 120);
-						Draw.circlePlus(teleX + teleSprite.width / 2, teleY + teleSprite.height / 2, teleRadius, 0xFFFFFF, 1, true, 1);
-					}
+				if (positionIsOnVisibleBoard(telePos)) {
+					var point:Point = getXYCoordForPositionOnBoard(telePos);
+					var teleSprite:Image = teleportPlayer.getPlayerSprite();
+					teleSprite.alpha = boardAlpha;
+					var teleRadius:Number = teleSprite.width * 2 * Math.sin(Math.PI / 180 * teleportTimer * 180 / 120);
+					Draw.circlePlus(point.x + teleSprite.width / 2, point.y + teleSprite.height / 2, teleRadius, 0xFFFFFF, 1, true, 1);
 				}
 			}
 			
 			// draw board highlights and stuff
 			for each (var space:BoardPosition in playerPossibleMoves) // draw the path the player can walk to
 			{
-				// TODO - make this nicer or not hardcoded (this is just stolen from below)
 				var spaceCopy:BoardPosition = space.deepCopy();
-				// adjust for the viewport
-				spaceCopy.row -= startRow;
-				spaceCopy.col -= startCol;
-				
-				if (spaceCopy.row >= 0 && spaceCopy.row < viewRows)
-					if (spaceCopy.col >= 0 && spaceCopy.col < viewCols)
-						Draw.rect(boardX + spaceCopy.col * tileSize, boardY + spaceCopy.row * tileSize, tileSize, tileSize, 0x0000FF, 0.25 * boardAlpha * spaceGlowAlphaMultiplier2);
+				if (positionIsOnVisibleBoard(spaceCopy)) {
+					point = getXYCoordForPositionOnBoard(spaceCopy);
+					Draw.rect(point.x, point.y, tileSize, tileSize, 0x0000FF, 0.25 * boardAlpha * spaceGlowAlphaMultiplier2);
+				}	
 			}
 			
 			for each (space in playerWalk) // draw the path the player is walking
 			{
-				// TODO - make this nicer or not hardcoded
 				spaceCopy = space.deepCopy();
-				// adjust for the viewport
-				spaceCopy.row -= startRow;
-				spaceCopy.col -= startCol;
-				var color:uint = 0x0000FF;
-				if (playerWalk.indexOf(space) == playerWalk.length - 1) // last tile in walk
-					color = 0x00FFFF;
-				if (spaceCopy.row >= 0 && spaceCopy.row < viewRows)
-					if (spaceCopy.col >= 0 && spaceCopy.col < viewCols)
-						Draw.rect(boardX + spaceCopy.col * tileSize, boardY + spaceCopy.row * tileSize, tileSize, tileSize, color, 0.5 * boardAlpha);
+	
+				if (positionIsOnVisibleBoard(spaceCopy)) {
+					var color:uint = 0x0000FF;
+					if (playerWalk.indexOf(space) == playerWalk.length - 1) // last tile in walk
+						color = 0x00FFFF;
+					
+					point = getXYCoordForPositionOnBoard(spaceCopy);
+					Draw.rect(point.x, point.y, tileSize, tileSize, color, 0.5 * boardAlpha);
+				}
 			}
 			
 			// draw combat overlay if battle is happening
@@ -837,7 +830,7 @@ package
 				} 
 			} else if (gameStateIsCombat()) {				
 				// draw defender
-				playerSprite = defensePlayer.getPlayerSprite();
+				var playerSprite:Image = defensePlayer.getPlayerSprite();
 				playerSprite.alpha = 1;
 				Draw.graphic(playerSprite, combatX, combatY);
 				combatY += 40;
@@ -957,7 +950,7 @@ package
 			for (i = 0; i < players.length; i++)
 			{
 				// TODO - move into own class so it's not massive lag
-				player = players[i];
+				var player:Player = players[i];
 				var cards:Vector.<BoardCard> = player.getCards();
 				var items:Vector.<BoardItem> = player.getItems();
 				
