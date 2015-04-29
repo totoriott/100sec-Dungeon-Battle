@@ -13,7 +13,7 @@ package
 		internal var level:int = 1;
 		protected var skillPoints:Array = [14, 2, 3, 3];
 		
-		internal var name:String = "Nameless"; // TODO - funny default name
+		internal var name:String = "Nameless";
 		internal var hp:int = 10;
 		internal var maxHp:int = 10;
 		internal var credits:int = 0;
@@ -182,7 +182,6 @@ package
 		public function doMovementRoll():int
 		{
 			lastMovementRoll = [];
-			// TODO: display roll somewhere
 			lastMovementRoll.push(Math.ceil(FP.rand(6)+1));
 			return getMovementRollValue();
 		}
@@ -205,7 +204,6 @@ package
 		public function doCombatRoll(onAttack:Boolean):int
 		{
 			lastCombatRoll = [];
-			// TODO: display roll somewhere
 			lastCombatRoll.push(Math.ceil(FP.rand(6)+1));
 			lastCombatRoll.push(Math.ceil(FP.rand(6) + 1));
 			var noun:String = onAttack ? "attack" : "defense";
@@ -243,7 +241,6 @@ package
 		public function doEscapeRoll():int
 		{
 			lastEscapeRoll = [];
-			// TODO: display roll somewhere
 			lastEscapeRoll.push(Math.ceil(FP.rand(6)+1));
 			lastEscapeRoll.push(Math.ceil(FP.rand(6) + 1));
 			trace(name + " escape roll: " + lastEscapeRoll[0] + "," + lastEscapeRoll[1] + " -> " + getEscapeRollValue());
@@ -297,7 +294,6 @@ package
 			}
 		}
 		
-		// TODO - you could sort the hands even though you hella don't in battle hunter
 		public function giveCard(newCard:BoardCard):void
 		{
 			if (hand.length >= Constants.HAND_CARD_LIMIT)
