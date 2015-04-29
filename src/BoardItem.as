@@ -7,6 +7,7 @@ package
 	public class BoardItem
 	{
 		public var id:int;
+		public var name:String;
 		
 		public var image:Image;
 		public var type:int;
@@ -16,9 +17,10 @@ package
 		public var creditValue:int;
 		public var fromThisBoard:Boolean; // whether we picked up this item on this run
 		
-		public function BoardItem(theId:int, i:Image, t:int, v:int, pt:int, sale:int) 
+		public function BoardItem(theId:int, tName:String, i:Image, t:int, v:int, pt:int, sale:int) 
 		{
 			id = theId;
+			name = tName;
 			
 			image = i;
 			type = t;
@@ -31,15 +33,42 @@ package
 		}
 		
 		public static function BoardItemFromId(id:int):BoardItem {
-			return BoardCardFromArray(Constants.TREASURE_DB[id]);
+			return BoardItemFromArray(Constants.TREASURE_DB[id]);
 		}
 		
-		public static function BoardCardFromArray(a:Array):BoardItem {
-			return new BoardItem(a[0], a[1], a[2], a[3], a[4], a[5]);
+		public static function BoardItemFromArray(a:Array):BoardItem {
+			return new BoardItem(a[0], a[1], a[2], a[3], a[4], a[5], a[6]);
 		}
 		
 		public function deepCopy():BoardItem {
-			return new BoardItem(id, image, type, value, pointValue, creditValue);
+			return new BoardItem(id, name, image, type, value, pointValue, creditValue);
+		}
+		
+		public function getAttackBonus():int
+		{
+			if (type == Constants.ITEM_ATK) {
+				return value;
+			}
+			
+			return 0;
+		}
+		
+		public function getDefenseBonus():int
+		{
+			if (type == Constants.ITEM_DEF) {
+				return value;
+			}
+			
+			return 0;
+		}
+		
+		public function getMoveBonus():int
+		{
+			if (type == Constants.ITEM_MOVE) {
+				return value;
+			}
+			
+			return 0;
 		}
 		
 	}

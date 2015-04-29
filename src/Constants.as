@@ -100,6 +100,9 @@ package
 		
 		// Item/treasure type enum
 		public static var ITEM_NOEFFECT:int = 0;
+		public static var ITEM_ATK:int = 0;
+		public static var ITEM_DEF:int = 1;
+		public static var ITEM_MOVE:int = 2;
 		
 		[Embed(source = 'assets/font/segoeui.ttf', embedAsCFF = "false", fontFamily = 'Segoe')] private static const FONT_SEGOE:Class;
 		
@@ -246,18 +249,18 @@ package
 		public static var TREASURE_DB:Array;
 		
 		public static function initTreasureDb():void {
-			// id, image, effect type, effect value, point value, resale value
+			// id, name, image, effect type, effect value, point value, resale value
 			TREASURE_DB = [
-				[0, new Image(SRC_ITEM_0), ITEM_NOEFFECT, 0, 1000, 100],
-				[1, new Image(SRC_ITEM_1), ITEM_NOEFFECT, 0, 1000, 100],
-				[2, new Image(SRC_ITEM_2), ITEM_NOEFFECT, 0, 1000, 100],
-				[3, new Image(SRC_ITEM_3), ITEM_NOEFFECT, 0, 1000, 100],
-				[4, new Image(SRC_ITEM_4), ITEM_NOEFFECT, 0, 1000, 100],
-				[5, new Image(SRC_ITEM_5), ITEM_NOEFFECT, 0, 1000, 100],
-				[6, new Image(SRC_ITEM_6), ITEM_NOEFFECT, 0, 1000, 100],
-				[7, new Image(SRC_ITEM_7), ITEM_NOEFFECT, 0, 1000, 100],
-				[8, new Image(SRC_ITEM_8), ITEM_NOEFFECT, 0, 1000, 100],
-				[9, new Image(SRC_ITEM_9), ITEM_NOEFFECT, 0, 1000, 100],
+				[0, "Gold Sword", 	new Image(SRC_ITEM_0), ITEM_ATK, 3, 1000, 100],
+				[1, "Sword", 		new Image(SRC_ITEM_1), ITEM_ATK, 2, 1000, 100],
+				[2, "Gold Shield", 	new Image(SRC_ITEM_2), ITEM_DEF, 2, 1000, 100],
+				[3, "Shield", 		new Image(SRC_ITEM_3), ITEM_DEF, 1, 1000, 100],
+				[4, "Speed Shoes", 	new Image(SRC_ITEM_4), ITEM_MOVE, 1, 1000, 100],
+				[5, "Emerald", 		new Image(SRC_ITEM_5), ITEM_NOEFFECT, 0, 1000, 100],
+				[6, "Ruby", 		new Image(SRC_ITEM_6), ITEM_NOEFFECT, 0, 1000, 100],
+				[7, "Gold Bars", 	new Image(SRC_ITEM_7), ITEM_NOEFFECT, 0, 1000, 100],
+				[8, "Money Sack", 	new Image(SRC_ITEM_8), ITEM_NOEFFECT, 0, 1000, 100],
+				[9, "Handheld", 	new Image(SRC_ITEM_9), ITEM_NOEFFECT, 0, 1000, 100],
 			];
 		}
 		

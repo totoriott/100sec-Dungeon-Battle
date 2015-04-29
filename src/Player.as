@@ -81,22 +81,40 @@ package
 		public function getAttack():int
 		{
 			var atk:int = skillPoints[Constants.SKILL_ATK];
+			
+			for (var i:int = 0; i < items.length; i++) {
+				var item:BoardItem = items[i];
+				atk += item.getAttackBonus();
+			}
+			
 			return atk;
 		}
 		
 		public function getDefense():int
 		{
 			var def:int = skillPoints[Constants.SKILL_DEF] / 2;
+			
+			for (var i:int = 0; i < items.length; i++) {
+				var item:BoardItem = items[i];
+				def += item.getDefenseBonus();
+			}
+				
 			return def;
 		}
 		
 		public function getMoveBonus():int
 		{
-			if (legDamage) { // grr
-				return 0;
+			var move:int = 0;
+			
+			for (var i:int = 0; i < items.length; i++) {
+				var item:BoardItem = items[i];
+				move += item.getMoveBonus();
 			}
 			
-			var move:int = skillPoints[Constants.SKILL_MOVE] / 3;
+			if (!legDamage) {
+				move += skillPoints[Constants.SKILL_MOVE] / 3;
+			}
+			
 			return move;
 		}
 		
