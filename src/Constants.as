@@ -25,7 +25,8 @@ package
 		public static var GSTATE_COMBAT_RESOLVE:int = 11;
 		public static var GSTATE_COMBAT_DEFEATED_SELECTREWARD:int = 12;
 		public static var GSTATE_DOREST:int = 13;
-		public static var GSTATE_ENDTURN:int = 14;
+		public static var GSTATE_TELEPORTPLAYER:int = 14;
+		public static var GSTATE_ENDTURN:int = 15;
 		
 		// Graphics things
 		public static var FRAMES_BETWEEN_SQUARES_MOVED:int = 5;
@@ -321,6 +322,7 @@ package
 		
 		// Render timers
 		public static var RENDER_PLAYERGLOW:String = "renderPlayerGlow";
+		public static var RENDER_TELEPORTPLAYER:String = "renderTeleportPlayer";
 		
 		public static function graphicsAnimationPercentFromTiming(time:int, fadeInStart:int, inDuration:int, fadeOutStart:int, outDuration:int):Number {
 			var alpha:Number = 0;

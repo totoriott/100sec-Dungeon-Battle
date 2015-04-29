@@ -38,6 +38,9 @@ package
 		private var selectedSurrenderItem:int = 0;
 		private var selectedAttackCard:int = 0;
 	
+		private var teleportPlayer:Player;
+		private var teleported:Boolean = false;
+		
 		private var cardIndex:int = 0; // index of the card the player is selecting
 		private var playerWalk:Vector.<BoardPosition>; // the squares that the player is walking this turn
 		private var playerPossibleMoves:Vector.<BoardPosition>; // the squares that the player could walk to this turn
@@ -498,6 +501,14 @@ package
 				case Constants.GSTATE_DOROLL:
 					break;
 					
+				case Constants.GSTATE_DOREST:
+					break;
+					
+				case Constants.GSTATE_TELEPORTPLAYER:
+					startRenderTimer(Constants.RENDER_TELEPORTPLAYER);
+					teleported = false;
+					break;
+					
 				case Constants.GSTATE_ENDTURN:
 					if (Math.random() < 0.2 && !isEnemyTurn()) { // TODO: change constant
 						addEnemyToBoard();
@@ -599,6 +610,10 @@ package
 					update_doRest(inputArray);
 					break;
 					
+				case Constants.GSTATE_TELEPORTPLAYER:
+					update_teleportPlayer(inputArray);
+					break;
+						
 				case Constants.GSTATE_ENDTURN: // end turn cleanup
 					update_endTurn(inputArray);
 					break;
@@ -608,7 +623,10 @@ package
 		override public function render():void
 		{
 			super.render();
-			incrementRenderTimers();
+			
+			if (overlaysQueue.length == 0) {
+				incrementRenderTimers(); // don't update timers while showing overlays, probably
+			}			
 			
 			// TODO - optimize the hell out of everything
 			
@@ -706,6 +724,26 @@ package
 							Draw.circlePlus(thisPlayerX + enemySprite.width / 2, thisPlayerY + enemySprite.height / 2, enemySprite.width, 0xFFFF00, spaceGlowAlphaMultiplier, true, 1);
 						}
 						Draw.graphic(enemySprite, thisPlayerX, thisPlayerY);
+					}
+				}
+			}
+			
+			// draw the teleport highlight
+			if (gameState == Constants.GSTATE_TELEPORTPLAYER) {
+				var telePos:BoardPosition = teleportPlayer.getPosition();
+				var teleportTimer:int = getRenderTimer(Constants.RENDER_TELEPORTPLAYER);
+
+				// adjust for the viewport
+				telePos.row -= startRow;
+				telePos.col -= startCol;
+				if (telePos.row >= 0 && telePos.row < viewRows) {
+					if (telePos.col >= 0 &&telePos.col < viewCols) {
+						var teleSprite:Image = teleportPlayer.getPlayerSprite();
+						teleSprite.alpha = boardAlpha;
+						var teleX:int = boardX + telePos.col * tileSize;
+						var teleY:int = boardY + telePos.row * tileSize;
+						var teleRadius:Number = teleSprite.width * 2 * Math.sin(Math.PI / 180 * teleportTimer * 180 / 120);
+						Draw.circlePlus(teleX + teleSprite.width / 2, teleY + teleSprite.height / 2, teleRadius, 0xFFFFFF, 1, true, 1);
 					}
 				}
 			}
@@ -1311,7 +1349,9 @@ package
 					}
 					
 					// if you don't have the key item, jump to a random location
-					curPlayer.moveToSpace(getEmptySpaceOnBoard()); 
+					teleportPlayer = curPlayer;
+					changeState(Constants.GSTATE_TELEPORTPLAYER);
+					return;
 					break;
 			}
 			
@@ -1760,7 +1800,8 @@ package
 				attackPlayer.addItem(transferItem);
 				
 				// defense teleports away
-				defensePlayer.moveToSpace(getEmptySpaceOnBoard()); 
+				teleportPlayer = defensePlayer;
+				changeState(Constants.GSTATE_TELEPORTPLAYER);
 				
 				queueOverlay(new OverlaySurrenderItem(defensePlayer, attackPlayer, transferItem.id, transferItem.fromThisBoard && transferItem.id == keyItemId, false));
 				return; // end combat
@@ -1842,16 +1883,16 @@ package
 				// remove enemy or teleport away player
 				if (defensePlayer is Enemy) {
 					enemies.splice(enemies.indexOf(defensePlayer), 1);
+					changeState(Constants.GSTATE_ENDTURN);
 				} else {
 					defensePlayer.respawn();
-					defensePlayer.moveToSpace(getEmptySpaceOnBoard()); 
+					
+					teleportPlayer = defensePlayer;
+					changeState(Constants.GSTATE_TELEPORTPLAYER);
 				}
-
 				
 				attackPlayer.initUX();
 				defensePlayer.initUX(); // TODO: can we do this nicer, somewhere
-				
-				changeState(Constants.GSTATE_ENDTURN);
 			}
 			else if (inputArray[Constants.KEY_FIRE1] == Constants.INPUT_PRESSED || defensePlayer.getItems().length == 0)
 			{
@@ -1865,12 +1906,12 @@ package
 				// remove enemy or teleport away player
 				if (defensePlayer is Enemy) {
 					enemies.splice(enemies.indexOf(defensePlayer), 1);
+					changeState(Constants.GSTATE_ENDTURN);
 				} else {
 					defensePlayer.respawn();
-					defensePlayer.moveToSpace(getEmptySpaceOnBoard()); 
+					teleportPlayer = defensePlayer;
+					changeState(Constants.GSTATE_TELEPORTPLAYER);
 				}
-
-				changeState(Constants.GSTATE_ENDTURN);
 			}
 			else if (inputArray[Constants.KEY_LEFT] == Constants.INPUT_PRESSED) {
 				selectedSurrenderItem--;
@@ -1904,6 +1945,17 @@ package
 			// TODO: overlay
 
 			changeState(Constants.GSTATE_ENDTURN);
+		}
+		
+		private function update_teleportPlayer(inputArray:Array):void
+		{
+			var teleportTimer:int = getRenderTimer(Constants.RENDER_TELEPORTPLAYER);
+			if (teleportTimer >= 60 && !teleported) {
+				teleportPlayer.moveToSpace(getEmptySpaceOnBoard()); 
+				teleported = true;
+			} else if (teleportTimer >= 120) {
+				changeState(Constants.GSTATE_ENDTURN);
+			}
 		}
 		
 		public function queueOverlay(overlay:GraphicOverlay):void {
